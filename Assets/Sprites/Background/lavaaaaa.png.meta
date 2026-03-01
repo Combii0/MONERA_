@@ -1,0 +1,456 @@
+fileFormatVersion: 2
+guid: 4103e2e23d632436abcca3f2829d291d
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 6038635665120632183
+    second: lavaaaaa_0
+  - first:
+      213: -8727898964123158285
+    second: lavaaaaa_1
+  - first:
+      213: 1811039563543858988
+    second: lavaaaaa_2
+  - first:
+      213: 399399337904909675
+    second: lavaaaaa_3
+  - first:
+      213: 8058983578994072808
+    second: lavaaaaa_4
+  - first:
+      213: -8495203236836761586
+    second: lavaaaaa_5
+  - first:
+      213: 4006453154195457409
+    second: lavaaaaa_6
+  - first:
+      213: -1313905734205591927
+    second: lavaaaaa_7
+  - first:
+      213: 4390785097466689835
+    second: lavaaaaa_8
+  - first:
+      213: 5411990823031155337
+    second: lavaaaaa_9
+  - first:
+      213: -7036233264648334014
+    second: lavaaaaa_10
+  - first:
+      213: 4976218442187752304
+    second: lavaaaaa_11
+  - first:
+      213: 4104464636389995582
+    second: lavaaaaa_12
+  - first:
+      213: 8895396341698962885
+    second: lavaaaaa_13
+  - first:
+      213: -4029546138036878853
+    second: lavaaaaa_14
+  - first:
+      213: -4372216670183992586
+    second: lavaaaaa_15
+  - first:
+      213: -2282734501555269258
+    second: lavaaaaa_16
+  - first:
+      213: 5351031214673318102
+    second: lavaaaaa_17
+  - first:
+      213: 7339007355126570333
+    second: lavaaaaa_18
+  - first:
+      213: 1853934622804738641
+    second: lavaaaaa_19
+  - first:
+      213: -6497222288957907839
+    second: lavaaaaa_20
+  - first:
+      213: -633898608213928584
+    second: lavaaaaa_21
+  - first:
+      213: -6371664532553762381
+    second: lavaaaaa_22
+  - first:
+      213: 3410946727264352803
+    second: lavaaaaa_23
+  - first:
+      213: 3949014814771428224
+    second: lavaaaaa_24
+  - first:
+      213: 4580303525517957005
+    second: lavaaaaa_25
+  - first:
+      213: -3703974705237586447
+    second: lavaaaaa_26
+  - first:
+      213: -2308266182469936454
+    second: lavaaaaa_27
+  - first:
+      213: -1456207043264561993
+    second: lavaaaaa_28
+  - first:
+      213: 7821266140080262125
+    second: lavaaaaa_29
+  - first:
+      213: -8863347130842002993
+    second: lavaaaaa_30
+  - first:
+      213: 410158008841047714
+    second: lavaaaaa_31
+  - first:
+      213: 7990175539926565751
+    second: lavaaaaa_32
+  - first:
+      213: -9081282528243478363
+    second: lavaaaaa_33
+  - first:
+      213: -2062395086673187680
+    second: lavaaaaa_34
+  - first:
+      213: 6910170979836510212
+    second: lavaaaaa_35
+  - first:
+      213: -2472952828719885422
+    second: lavaaaaa_36
+  - first:
+      213: -442763674779303137
+    second: lavaaaaa_37
+  - first:
+      213: 8122389220973531618
+    second: lavaaaaa_38
+  - first:
+      213: -7965032058855032300
+    second: lavaaaaa_39
+  - first:
+      213: -7318167498860645426
+    second: lavaaaaa_40
+  - first:
+      213: -5649969901027610093
+    second: lavaaaaa_41
+  - first:
+      213: 3004818718919273491
+    second: lavaaaaa_42
+  - first:
+      213: -7122609455830501407
+    second: lavaaaaa_43
+  - first:
+      213: -6992631740049538383
+    second: lavaaaaa_44
+  - first:
+      213: 5617685929496255726
+    second: lavaaaaa_45
+  - first:
+      213: -8577876025698100765
+    second: lavaaaaa_46
+  - first:
+      213: -2834728289697873600
+    second: lavaaaaa_47
+  - first:
+      213: 849767832281772419
+    second: lavaaaaa_48
+  - first:
+      213: -4631493670857039086
+    second: lavaaaaa_49
+  - first:
+      213: 3659943603668597542
+    second: lavaaaaa_50
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: lavaaaaa_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 320
+        height: 180
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 77d1583b42b8dc350800000000000000
+      internalID: 6038635665120632183
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: lavaaaaa_1
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 0
+        width: 320
+        height: 180
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3f870ff622640e680800000000000000
+      internalID: -8727898964123158285
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: lavaaaaa_2
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 0
+        width: 320
+        height: 180
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c2fc53343ea122910800000000000000
+      internalID: 1811039563543858988
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: lavaaaaa_3
+      rect:
+        serializedVersion: 2
+        x: 960
+        y: 0
+        width: 320
+        height: 180
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b6d295be493fa8500800000000000000
+      internalID: 399399337904909675
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: lavaaaaa_4
+      rect:
+        serializedVersion: 2
+        x: 1280
+        y: 0
+        width: 320
+        height: 180
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ecd5a4edd247df60800000000000000
+      internalID: 8058983578994072808
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: lavaaaaa_5
+      rect:
+        serializedVersion: 2
+        x: 1600
+        y: 0
+        width: 320
+        height: 180
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e00a8956aa9fa1a80800000000000000
+      internalID: -8495203236836761586
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: lavaaaaa_6
+      rect:
+        serializedVersion: 2
+        x: 1920
+        y: 0
+        width: 320
+        height: 180
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1854019aae7c99730800000000000000
+      internalID: 4006453154195457409
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: lavaaaaa_7
+      rect:
+        serializedVersion: 2
+        x: 2240
+        y: 0
+        width: 320
+        height: 180
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 98ea35432b114cde0800000000000000
+      internalID: -1313905734205591927
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 0d427a8600f60474cbddeef8f76df7ca
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":320.0,"y":180.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      lavaaaaa_0: 6038635665120632183
+      lavaaaaa_1: -8727898964123158285
+      lavaaaaa_2: 1811039563543858988
+      lavaaaaa_3: 399399337904909675
+      lavaaaaa_4: 8058983578994072808
+      lavaaaaa_5: -8495203236836761586
+      lavaaaaa_6: 4006453154195457409
+      lavaaaaa_7: -1313905734205591927
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
