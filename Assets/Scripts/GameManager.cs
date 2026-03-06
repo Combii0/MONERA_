@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -35,8 +36,25 @@ public class GameManager : MonoBehaviour
     [SerializeField, Range(2, 20)] private int pixelFadeSteps = 12;
     [SerializeField] private string demoCompletedText = "That was Monera DEMO!";
 
+    [Header("Mensaje Sobre Player")]
+    [SerializeField, TextArea(1, 3)] private string storyMessageText = "The Archeotype makes a bacteria the king of the world.";
+    [SerializeField] private float storyMessageDuration = 6f;
+    [SerializeField] private Vector3 storyMessageLocalOffset = new Vector3(0f, 1.88f, 0f);
+    [SerializeField] private Vector2 storyMessageCanvasSize = new Vector2(780f, 210f);
+    [SerializeField, Range(0.002f, 0.05f)] private float storyMessageCanvasScale = 0.02f;
+    [SerializeField, Range(0.25f, 2f)] private float storyMessageFontSizeRatio = 0.65f;
+    [SerializeField] private int storyMessageSortingOrder = 500;
+    [SerializeField] private float storyMessageRevealCharsPerSecond = 38f;
+    [SerializeField] private float storyMessagePopDuration = 0.22f;
+
+    [Header("Audio Mensaje")]
+    [SerializeField] private AudioSource storyMessageAudioSource;
+    [SerializeField] private AudioClip storyMessageTypeSfx;
+    [SerializeField, Range(0f, 1f)] private float storyMessageTypeSfxVolume = 0.65f;
+    [SerializeField] private float storyMessageTypeSfxMinInterval = 0.02f;
+
     [Header("Pantalla Muerte")]
-    [SerializeField] private string restartSceneName = "World2";
+    [SerializeField] private string restartSceneName = "The Cave";
     [SerializeField] private string menuSceneName = "Monera";
     [SerializeField] private string deathTitleText = "YOU DIED";
     [SerializeField] private float deathFadeDuration = 0.8f;
@@ -48,7 +66,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float musicFadeDuration = 1f;
 
     [Header("Muerte por Caida")]
-    [SerializeField] private float instantDeathY = -12f;
+    [SerializeField] private float instantDeathY = -30f;
 
     private int currentLives;
     private float nextAllowedHitTime;
@@ -67,8 +85,14 @@ public class GameManager : MonoBehaviour
     private Canvas demoCanvas;
     private Image demoFadeImage;
     private CanvasGroup demoContentGroup;
+    private GameObject storyMessageCanvas;
+    private TextMeshProUGUI storyMessageTmp;
+    private Coroutine storyMessageRoutine;
+    private float nextStoryTypeSfxTime;
+    private string activeStoryMessageText = string.Empty;
 
     public static GameManager Instance { get; private set; }
+    public float InstantDeathY => instantDeathY;
 
     private void Awake()
     {
@@ -79,6 +103,11 @@ public class GameManager : MonoBehaviour
         }
 
         Instance = this;
+        NormalizeStoryMessageSettings();
+        if (instantDeathY > -30f)
+        {
+            instantDeathY = -30f;
+        }
         currentLives = Mathf.Max(1, maxLives);
         ResolveReferences();
         RefreshHpLabel();
@@ -148,9 +177,10 @@ public class GameManager : MonoBehaviour
         return true;
     }
 
-    public bool TriggerLetterEnding(Transform messageTarget)
+    public bool TriggerLetterEnding(Transform messageTarget, string customMessage = null)
     {
-        if (levelEnded || deathSequenceStarted || demoSequenceStarted) return false;
+        if (deathSequenceStarted) return false;
+        if (storyMessageRoutine != null || storyMessageCanvas != null) return false;
 
         ResolveReferences();
         if (messageTarget == null && player != null)
@@ -158,12 +188,8 @@ public class GameManager : MonoBehaviour
             messageTarget = player.transform;
         }
 
-        CreateLetterMessage(messageTarget);
-        StopGameplaySystems(true);
-        levelEnded = true;
-        demoSequenceStarted = true;
-        StartCoroutine(LetterEndingRoutine());
-        Debug.Log("Nivel finalizado por LetterTrigger.", this);
+        string messageToShow = string.IsNullOrWhiteSpace(customMessage) ? storyMessageText : customMessage;
+        ShowStoryMessage(messageTarget, messageToShow);
         return true;
     }
 
@@ -249,6 +275,8 @@ public class GameManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        ClearStoryMessage();
+
         if (Mathf.Approximately(Time.timeScale, 0f))
         {
             Time.timeScale = 1f;
@@ -257,6 +285,183 @@ public class GameManager : MonoBehaviour
         if (Instance == this)
         {
             Instance = null;
+        }
+    }
+
+    private void ShowStoryMessage(Transform target, string message)
+    {
+        if (string.IsNullOrWhiteSpace(message)) return;
+
+        ResolveReferences();
+        if (target == null && player != null)
+        {
+            target = player.transform;
+        }
+        if (target == null) return;
+
+        if (storyMessageRoutine != null)
+        {
+            StopCoroutine(storyMessageRoutine);
+            storyMessageRoutine = null;
+        }
+
+        ClearStoryMessage();
+        activeStoryMessageText = message;
+        CreateStoryMessageVisual(target, activeStoryMessageText);
+        storyMessageRoutine = StartCoroutine(StoryMessageLifetimeRoutine());
+    }
+
+    private void NormalizeStoryMessageSettings()
+    {
+        storyMessageDuration = Mathf.Max(6f, storyMessageDuration);
+        storyMessageFontSizeRatio = Mathf.Clamp(storyMessageFontSizeRatio, 0.25f, 1f);
+        storyMessageRevealCharsPerSecond = Mathf.Max(1f, storyMessageRevealCharsPerSecond);
+        storyMessagePopDuration = Mathf.Max(0.05f, storyMessagePopDuration);
+    }
+
+    private void CreateStoryMessageVisual(Transform target, string message)
+    {
+        if (target == null || string.IsNullOrWhiteSpace(message)) return;
+
+        storyMessageCanvas = new GameObject("StoryMessageCanvas", typeof(RectTransform));
+        storyMessageCanvas.transform.SetParent(target, false);
+        storyMessageCanvas.transform.localPosition = storyMessageLocalOffset;
+
+        Canvas worldCanvas = storyMessageCanvas.AddComponent<Canvas>();
+        worldCanvas.renderMode = RenderMode.WorldSpace;
+        worldCanvas.overrideSorting = true;
+        worldCanvas.sortingOrder = storyMessageSortingOrder;
+
+        RectTransform canvasRect = worldCanvas.GetComponent<RectTransform>();
+        canvasRect.sizeDelta = new Vector2(Mathf.Max(720f, storyMessageCanvasSize.x), Mathf.Max(160f, storyMessageCanvasSize.y));
+        canvasRect.localScale = Vector3.one * Mathf.Max(0.02f, storyMessageCanvasScale);
+
+        SpriteRenderer playerSprite = target.GetComponentInChildren<SpriteRenderer>();
+        if (playerSprite != null)
+        {
+            worldCanvas.sortingLayerID = playerSprite.sortingLayerID;
+            worldCanvas.sortingOrder = playerSprite.sortingOrder + Mathf.Max(1, storyMessageSortingOrder);
+        }
+
+        GameObject textObj = new GameObject("Message", typeof(RectTransform));
+        textObj.transform.SetParent(storyMessageCanvas.transform, false);
+
+        storyMessageTmp = textObj.AddComponent<TextMeshProUGUI>();
+        RectTransform textRect = storyMessageTmp.rectTransform;
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = Vector2.zero;
+        textRect.offsetMax = Vector2.zero;
+
+        storyMessageTmp.text = message;
+        storyMessageTmp.color = Color.white;
+        storyMessageTmp.alignment = TextAlignmentOptions.Center;
+        storyMessageTmp.textWrappingMode = TextWrappingModes.Normal;
+        storyMessageTmp.overflowMode = TextOverflowModes.Overflow;
+        storyMessageTmp.maxVisibleCharacters = 0;
+
+        float baseFontSize = hpText != null ? hpText.fontSize : 36f;
+        float scaledSize = baseFontSize * Mathf.Clamp(storyMessageFontSizeRatio, 0.25f, 1f);
+        storyMessageTmp.fontSize = Mathf.Clamp(scaledSize, 10f, 20f);
+
+        if (hpText != null && hpText.font != null)
+        {
+            storyMessageTmp.font = hpText.font;
+            if (hpText.fontSharedMaterial != null)
+            {
+                storyMessageTmp.fontSharedMaterial = hpText.fontSharedMaterial;
+            }
+        }
+    }
+
+    private IEnumerator StoryMessageLifetimeRoutine()
+    {
+        if (storyMessageTmp == null)
+        {
+            storyMessageRoutine = null;
+            yield break;
+        }
+
+        float sequenceStartTime = Time.unscaledTime;
+
+        RectTransform textRect = storyMessageTmp.rectTransform;
+        Vector3 initialScale = textRect.localScale;
+        textRect.localScale = initialScale * 0.82f;
+
+        storyMessageTmp.ForceMeshUpdate();
+        int totalChars = Mathf.Max(0, storyMessageTmp.textInfo.characterCount);
+        float visible = 0f;
+        float revealSpeed = Mathf.Max(1f, storyMessageRevealCharsPerSecond);
+        float popTimer = 0f;
+        float popDuration = Mathf.Max(0.05f, storyMessagePopDuration);
+
+        while (storyMessageTmp != null && (storyMessageTmp.maxVisibleCharacters < totalChars || popTimer < popDuration))
+        {
+            float dt = Time.unscaledDeltaTime;
+            visible += revealSpeed * dt;
+
+            int nextVisible = Mathf.Min(totalChars, Mathf.FloorToInt(visible));
+            while (storyMessageTmp.maxVisibleCharacters < nextVisible)
+            {
+                storyMessageTmp.maxVisibleCharacters++;
+                PlayStoryTypeSfx(storyMessageTmp.maxVisibleCharacters - 1);
+            }
+
+            popTimer += dt;
+            float popT = PixelStep01(popTimer / popDuration);
+            float scale = Mathf.Lerp(0.82f, 1f, popT);
+            textRect.localScale = initialScale * scale;
+            yield return null;
+        }
+
+        if (storyMessageTmp != null)
+        {
+            storyMessageTmp.maxVisibleCharacters = totalChars;
+            textRect.localScale = initialScale;
+        }
+
+        float elapsed = Time.unscaledTime - sequenceStartTime;
+        // Keep total on-screen time close to storyMessageDuration (including reveal).
+        float remaining = Mathf.Max(0f, storyMessageDuration - elapsed);
+        if (remaining > 0f)
+        {
+            yield return new WaitForSecondsRealtime(remaining);
+        }
+        ClearStoryMessage();
+        storyMessageRoutine = null;
+    }
+
+    private void ClearStoryMessage()
+    {
+        if (storyMessageCanvas != null)
+        {
+            Destroy(storyMessageCanvas);
+            storyMessageCanvas = null;
+        }
+        storyMessageTmp = null;
+        activeStoryMessageText = string.Empty;
+    }
+
+    private void PlayStoryTypeSfx(int characterIndex)
+    {
+        if (storyMessageTypeSfx == null) return;
+        if (string.IsNullOrEmpty(activeStoryMessageText)) return;
+        if (characterIndex < 0 || characterIndex >= activeStoryMessageText.Length) return;
+        if (char.IsWhiteSpace(activeStoryMessageText[characterIndex])) return;
+        if (Time.unscaledTime < nextStoryTypeSfxTime) return;
+
+        nextStoryTypeSfxTime = Time.unscaledTime + Mathf.Max(0.005f, storyMessageTypeSfxMinInterval);
+        float volume = Mathf.Clamp01(storyMessageTypeSfxVolume);
+
+        if (storyMessageAudioSource != null)
+        {
+            storyMessageAudioSource.PlayOneShot(storyMessageTypeSfx, volume);
+            return;
+        }
+
+        if (player != null)
+        {
+            player.PlayCustomSfx(storyMessageTypeSfx, volume);
         }
     }
 
@@ -404,6 +609,16 @@ public class GameManager : MonoBehaviour
 
     private void TriggerInstantDeathByFall()
     {
+        if (player != null)
+        {
+            Debug.Log($"Muerte por caida: y={player.transform.position.y:F2}, umbral={instantDeathY:F2}", this);
+        }
+
+        CamaraMovement cameraMovement = FindFirstObjectByType<CamaraMovement>();
+        if (cameraMovement != null)
+        {
+            cameraMovement.SnapToPlayerImmediate();
+        }
         currentLives = 0;
         RefreshHpLabel();
         StartDeathSequence();
@@ -670,7 +885,9 @@ public class GameManager : MonoBehaviour
         text.alignment = TextAlignmentOptions.Center;
         text.textWrappingMode = TextWrappingModes.NoWrap;
         text.fontStyle = FontStyles.Bold;
-        text.enableKerning = false;
+        List<UnityEngine.TextCore.OTL_FeatureTag> fontFeatures = new List<UnityEngine.TextCore.OTL_FeatureTag>(text.fontFeatures);
+        fontFeatures.Remove(UnityEngine.TextCore.OTL_FeatureTag.kern);
+        text.fontFeatures = fontFeatures;
         return text;
     }
 

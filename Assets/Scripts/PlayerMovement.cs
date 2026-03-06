@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
+using UnityEngine.Serialization;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -30,14 +31,16 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private float groundCheckExtra = 0.1f;
 
-    [Header("Paredes")]
-    [SerializeField] private bool enableWallJump = true;
-    [SerializeField] private Vector2 wallJumpForce = new Vector2(8.5f, 10.5f);
-    [SerializeField] private float wallJumpInputLockTime = 0.12f;
-    [SerializeField] private float wallSlideSpeed = 2.6f;
+    [Header("Pared")]
+    [SerializeField] private bool enableWallMovement = true;
+    [SerializeField] private LayerMask wallLayer;
     [SerializeField] private float wallCheckDistance = 0.08f;
-    [SerializeField] private float wallCheckTopRatio = 0.7f;
-    [SerializeField] private float wallCheckMidRatio = 0.45f;
+    [SerializeField, Range(0.25f, 1f)] private float wallCheckHeightFactor = 0.85f;
+    [SerializeField] private bool requireInputTowardsWallForSlide = true;
+    [SerializeField] private float wallSlideMaxSpeed = 2.8f;
+    [SerializeField] private float wallJumpHorizontalForce = 8f;
+    [SerializeField] private float wallJumpVerticalForce = 8.8f;
+    [SerializeField] private float wallJumpControlLockTime = 0.12f;
 
     [Header("Color Adaptativo")]
     [SerializeField] private bool enableAdaptiveTint = true;
@@ -82,10 +85,12 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private AudioSource sfxSource;
     [SerializeField] private AudioClip jumpSfx;
     [SerializeField] private AudioClip hurtSfx;
-    [SerializeField] private AudioClip shootSfx;
+    [FormerlySerializedAs("shootSfx")]
+    [SerializeField] private AudioClip projectileShootSfx;
     [SerializeField, Range(0f, 1f)] private float jumpSfxVolume = 1f;
     [SerializeField, Range(0f, 1f)] private float hurtSfxVolume = 1f;
-    [SerializeField, Range(0f, 1f)] private float shootSfxVolume = 0.9f;
+    [FormerlySerializedAs("shootSfxVolume")]
+    [SerializeField, Range(0f, 1f)] private float projectileShootSfxVolume = 0.9f;
 
     private Rigidbody2D rb;
     private BoxCollider2D boxCollider;
@@ -99,12 +104,13 @@ public class PlayerMovement : MonoBehaviour
     private float moveInput;
     private bool jumpHeld;
     private bool isGrounded;
+    private bool isTouchingWall;
     private bool isWallSliding;
-    private int touchingWallDirection;
+    private int wallDirection;
     private int extraJumpsRemaining;
     private float coyoteTimer;
     private float jumpBufferTimer;
-    private float wallJumpInputLockTimer;
+    private float wallJumpControlLockTimer;
     private string currentAnimation;
     private float tintTimer;
     private Color baseSpriteColor;
@@ -124,6 +130,7 @@ public class PlayerMovement : MonoBehaviour
     private const string ANIM_WALK = "Walk";
     private const string ANIM_JUMP = "Jump";
     private int EffectiveGroundMask => groundLayer.value == 0 ? Physics2D.DefaultRaycastLayers : groundLayer.value;
+    private int EffectiveWallMask => wallLayer.value == 0 ? EffectiveGroundMask : wallLayer.value;
 
     private void Awake()
     {
@@ -226,13 +233,7 @@ public class PlayerMovement : MonoBehaviour
             coyoteTimer = Mathf.Max(0f, coyoteTimer - Time.deltaTime);
         }
 
-        touchingWallDirection = GetTouchingWallDirection();
-        isWallSliding = enableWallJump
-            && !isGrounded
-            && touchingWallDirection != 0
-            && Mathf.Abs(moveInput) > 0.05f
-            && Mathf.Sign(moveInput) == touchingWallDirection
-            && rb.linearVelocity.y < 0f;
+        UpdateWallMovementState();
 
         if (moveInput > 0.01f) spriteRenderer.flipX = false;
         else if (moveInput < -0.01f) spriteRenderer.flipX = true;
@@ -248,27 +249,21 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
-        wallJumpInputLockTimer = Mathf.Max(0f, wallJumpInputLockTimer - Time.fixedDeltaTime);
+        wallJumpControlLockTimer = Mathf.Max(0f, wallJumpControlLockTimer - Time.fixedDeltaTime);
         ApplyHorizontalMovement();
         TryPerformJump();
-        ApplyWallSlide();
         ApplyBetterGravity();
     }
 
     private void ApplyHorizontalMovement()
     {
-        if (wallJumpInputLockTimer > 0f) return;
+        if (wallJumpControlLockTimer > 0f) return;
 
         float targetX = moveInput * moveSpeed;
         float accel = Mathf.Abs(moveInput) > 0.01f
             ? (isGrounded ? groundAcceleration : airAcceleration)
             : (isGrounded ? groundDeceleration : airDeceleration);
         float newVelX = Mathf.MoveTowards(rb.linearVelocity.x, targetX, accel * Time.fixedDeltaTime);
-
-        if (Mathf.Abs(moveInput) > 0.01f && IsTouchingWall(moveInput))
-        {
-            newVelX = 0f;
-        }
 
         rb.linearVelocity = new Vector2(newVelX, rb.linearVelocity.y);
     }
@@ -277,16 +272,8 @@ public class PlayerMovement : MonoBehaviour
     {
         if (jumpBufferTimer <= 0f) return;
 
-        if (CanWallJump())
+        if (TryPerformWallJump())
         {
-            float jumpDirectionX = -touchingWallDirection;
-            rb.linearVelocity = new Vector2(jumpDirectionX * wallJumpForce.x, wallJumpForce.y);
-            PlaySfx(jumpSfx, jumpSfxVolume);
-            wallJumpInputLockTimer = wallJumpInputLockTime;
-            jumpBufferTimer = 0f;
-            coyoteTimer = 0f;
-            isGrounded = false;
-            isWallSliding = false;
             return;
         }
 
@@ -306,26 +293,40 @@ public class PlayerMovement : MonoBehaviour
             PlaySfx(jumpSfx, jumpSfxVolume);
             extraJumpsRemaining--;
             jumpBufferTimer = 0f;
-            isWallSliding = false;
         }
     }
 
-    private bool CanWallJump()
+    private bool TryPerformWallJump()
     {
-        return enableWallJump
-            && !isGrounded
-            && touchingWallDirection != 0
-            && rb.linearVelocity.y <= 0.2f;
-    }
+        if (!enableWallMovement || isGrounded || !isTouchingWall) return false;
 
-    private void ApplyWallSlide()
-    {
-        if (!isWallSliding) return;
+        float maxAllowedVertical = Mathf.Max(0f, jumpForce - 0.1f);
+        float verticalForce = Mathf.Clamp(wallJumpVerticalForce, 0f, maxAllowedVertical);
+        if (verticalForce <= 0f) return false;
 
-        if (rb.linearVelocity.y < -wallSlideSpeed)
+        int jumpAwayDirection = wallDirection == 0 ? -facingDirection : -wallDirection;
+        float horizontalForce = Mathf.Abs(wallJumpHorizontalForce);
+        rb.linearVelocity = new Vector2(jumpAwayDirection * horizontalForce, verticalForce);
+
+        PlaySfx(jumpSfx, jumpSfxVolume);
+        jumpBufferTimer = 0f;
+        coyoteTimer = 0f;
+        isGrounded = false;
+        isWallSliding = false;
+        wallJumpControlLockTimer = Mathf.Max(0f, wallJumpControlLockTime);
+
+        if (jumpAwayDirection > 0)
         {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, -wallSlideSpeed);
+            spriteRenderer.flipX = false;
+            facingDirection = 1;
         }
+        else if (jumpAwayDirection < 0)
+        {
+            spriteRenderer.flipX = true;
+            facingDirection = -1;
+        }
+
+        return true;
     }
 
     private void ApplyBetterGravity()
@@ -342,6 +343,11 @@ public class PlayerMovement : MonoBehaviour
             velocity.y += gravity * (lowJumpGravityMultiplier - 1f) * Time.fixedDeltaTime;
         }
 
+        if (isWallSliding)
+        {
+            velocity.y = Mathf.Max(velocity.y, -Mathf.Max(0f, wallSlideMaxSpeed));
+        }
+
         velocity.y = Mathf.Max(velocity.y, -maxFallSpeed);
         rb.linearVelocity = velocity;
     }
@@ -354,30 +360,56 @@ public class PlayerMovement : MonoBehaviour
         return Physics2D.OverlapBox(checkPos, checkSize, 0f, EffectiveGroundMask);
     }
 
-    private bool IsTouchingWall(float direction)
+    private void UpdateWallMovementState()
     {
-        Bounds b = boxCollider.bounds;
-        float sign = Mathf.Sign(direction);
+        if (!enableWallMovement)
+        {
+            isTouchingWall = false;
+            isWallSliding = false;
+            wallDirection = 0;
+            return;
+        }
 
-        Vector2 sideOriginTop = new Vector2(b.center.x + (b.extents.x * sign), b.min.y + (b.size.y * wallCheckTopRatio));
-        Vector2 sideOriginMid = new Vector2(b.center.x + (b.extents.x * sign), b.min.y + (b.size.y * wallCheckMidRatio));
-        Vector2 rayDirection = new Vector2(sign, 0f);
+        isTouchingWall = IsTouchingWall(out wallDirection);
+        bool isFalling = rb.linearVelocity.y < -0.01f;
+        bool inputTowardsWall = Mathf.Abs(moveInput) > 0.01f && Mathf.Sign(moveInput) == wallDirection;
 
-        bool hitTop = Physics2D.Raycast(sideOriginTop, rayDirection, wallCheckDistance, EffectiveGroundMask);
-        bool hitMid = Physics2D.Raycast(sideOriginMid, rayDirection, wallCheckDistance, EffectiveGroundMask);
-        return hitTop || hitMid;
+        isWallSliding = !isGrounded
+            && isTouchingWall
+            && isFalling
+            && (!requireInputTowardsWallForSlide || inputTowardsWall);
     }
 
-    private int GetTouchingWallDirection()
+    private bool IsTouchingWall(out int direction)
     {
-        if (IsTouchingWall(1f)) return 1;
-        if (IsTouchingWall(-1f)) return -1;
-        return 0;
+        direction = 0;
+        Bounds b = boxCollider.bounds;
+        float checkDistance = Mathf.Max(0.01f, wallCheckDistance);
+        float checkHeight = b.size.y * Mathf.Clamp(wallCheckHeightFactor, 0.25f, 1f);
+        Vector2 checkSize = new Vector2(checkDistance, checkHeight);
+        Vector2 leftCheckPos = new Vector2(b.min.x - (checkDistance * 0.5f), b.center.y);
+        Vector2 rightCheckPos = new Vector2(b.max.x + (checkDistance * 0.5f), b.center.y);
+
+        bool touchLeftWall = Physics2D.OverlapBox(leftCheckPos, checkSize, 0f, EffectiveWallMask);
+        if (touchLeftWall)
+        {
+            direction = -1;
+            return true;
+        }
+
+        bool touchRightWall = Physics2D.OverlapBox(rightCheckPos, checkSize, 0f, EffectiveWallMask);
+        if (touchRightWall)
+        {
+            direction = 1;
+            return true;
+        }
+
+        return false;
     }
 
     private void UpdateAnimationState()
     {
-        if (animator == null) return;
+        if (animator == null || !animator.enabled) return;
 
         string targetAnimation;
         if (!isGrounded && Mathf.Abs(rb.linearVelocity.y) > 0.05f)
@@ -526,14 +558,18 @@ public class PlayerMovement : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireCube(checkPos, checkSize);
 
-        float sign = spriteRenderer != null && spriteRenderer.flipX ? -1f : 1f;
-        Vector2 sideOriginTop = new Vector2(b.center.x + (b.extents.x * sign), b.min.y + (b.size.y * wallCheckTopRatio));
-        Vector2 sideOriginMid = new Vector2(b.center.x + (b.extents.x * sign), b.min.y + (b.size.y * wallCheckMidRatio));
-        Vector2 rayDirection = new Vector2(sign, 0f) * wallCheckDistance;
+        if (enableWallMovement)
+        {
+            float checkDistance = Mathf.Max(0.01f, wallCheckDistance);
+            float checkHeight = b.size.y * Mathf.Clamp(wallCheckHeightFactor, 0.25f, 1f);
+            Vector2 wallCheckSize = new Vector2(checkDistance, checkHeight);
+            Vector2 leftWallCheckPos = new Vector2(b.min.x - (checkDistance * 0.5f), b.center.y);
+            Vector2 rightWallCheckPos = new Vector2(b.max.x + (checkDistance * 0.5f), b.center.y);
 
-        Gizmos.color = Color.cyan;
-        Gizmos.DrawLine(sideOriginTop, sideOriginTop + rayDirection);
-        Gizmos.DrawLine(sideOriginMid, sideOriginMid + rayDirection);
+            Gizmos.color = new Color(0.45f, 0.85f, 1f, 0.9f);
+            Gizmos.DrawWireCube(leftWallCheckPos, wallCheckSize);
+            Gizmos.DrawWireCube(rightWallCheckPos, wallCheckSize);
+        }
 
         if (enableAdaptiveTint && tintSampleRadius > 0.01f)
         {
@@ -600,7 +636,9 @@ public class PlayerMovement : MonoBehaviour
     private bool IsEnemyContact(Collider2D other)
     {
         EnemyMovement enemy = other.GetComponentInParent<EnemyMovement>();
-        return enemy != null;
+        if (enemy == null) return false;
+
+        return enemy.ShouldDamagePlayerFromCollider(other);
     }
 
     private void CacheGameManagerReference()
@@ -616,14 +654,51 @@ public class PlayerMovement : MonoBehaviour
         if (Time.time < nextShootTime) return;
 
         nextShootTime = Time.time + Mathf.Max(0.02f, shootCooldown);
-        SpawnProjectile();
-        PlaySfx(shootSfx, shootSfxVolume);
+        Vector2 shootDirection = GetShootDirection();
+        SpawnProjectile(shootDirection);
+        PlaySfx(projectileShootSfx, projectileShootSfxVolume);
     }
 
-    private void SpawnProjectile()
+    private Vector2 GetShootDirection()
     {
-        Vector2 direction = new Vector2(facingDirection == 0 ? 1f : facingDirection, 0f);
-        Vector3 spawnOffset = new Vector3(shootSpawnOffset.x * direction.x, shootSpawnOffset.y, 0f);
+        if (TryGetPointerWorldPosition(out Vector3 pointerWorldPosition))
+        {
+            Vector2 toPointer = (Vector2)(pointerWorldPosition - transform.position);
+            if (toPointer.sqrMagnitude > 0.0001f)
+            {
+                return toPointer.normalized;
+            }
+        }
+
+        return new Vector2(facingDirection == 0 ? 1f : facingDirection, 0f);
+    }
+
+    private bool TryGetPointerWorldPosition(out Vector3 pointerWorldPosition)
+    {
+        pointerWorldPosition = default;
+
+        if (Mouse.current == null) return false;
+
+        Camera activeCamera = Camera.main;
+        if (activeCamera == null) return false;
+
+        Vector2 pointerScreen = Mouse.current.position.ReadValue();
+        float cameraDistance = Mathf.Abs(activeCamera.transform.position.z - transform.position.z);
+        Vector3 pointerScreenPoint = new Vector3(pointerScreen.x, pointerScreen.y, cameraDistance);
+        pointerWorldPosition = activeCamera.ScreenToWorldPoint(pointerScreenPoint);
+        pointerWorldPosition.z = transform.position.z;
+        return true;
+    }
+
+    private void SpawnProjectile(Vector2 direction)
+    {
+        if (direction.sqrMagnitude <= 0.0001f)
+        {
+            direction = new Vector2(facingDirection == 0 ? 1f : facingDirection, 0f);
+        }
+
+        direction.Normalize();
+        Vector3 spawnOffset = (Vector3)(direction * shootSpawnOffset.x) + new Vector3(0f, shootSpawnOffset.y, 0f);
         Vector3 spawnPosition = transform.position + spawnOffset;
 
         GameObject projectileObj = new GameObject("PlayerProjectile");
@@ -647,7 +722,7 @@ public class PlayerMovement : MonoBehaviour
         projectileRb.bodyType = RigidbodyType2D.Kinematic;
         projectileRb.gravityScale = 0f;
         projectileRb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-        projectileRb.linearVelocity = direction.normalized * Mathf.Max(0.1f, projectileSpeed);
+        projectileRb.linearVelocity = direction * Mathf.Max(0.1f, projectileSpeed);
 
         if (playerColliders == null || playerColliders.Length == 0)
         {
@@ -804,10 +879,17 @@ public class PlayerMovement : MonoBehaviour
     private void OnValidate()
     {
         EnsureAudioSource();
+
         if (projectileSprite == null)
         {
             projectileSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Attacks/powerOrb.png");
         }
+
+        wallCheckDistance = Mathf.Max(0.01f, wallCheckDistance);
+        wallSlideMaxSpeed = Mathf.Max(0f, wallSlideMaxSpeed);
+        wallJumpHorizontalForce = Mathf.Max(0f, wallJumpHorizontalForce);
+        wallJumpVerticalForce = Mathf.Max(0f, wallJumpVerticalForce);
+        wallJumpControlLockTime = Mathf.Max(0f, wallJumpControlLockTime);
     }
 #endif
 }

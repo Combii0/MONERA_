@@ -52,6 +52,10 @@ public class Parallax : MonoBehaviour
     [SerializeField, Min(1)] private int maxCreatePerFramePerLayer = 8;
     [SerializeField, Min(0)] private int maxPooledTilesPerLayer = 12;
 
+    [Header("Ajuste Pantalla")]
+    [SerializeField] private bool fitLayersToCamera = true;
+    [SerializeField, Range(1f, 1.35f)] private float fitPadding = 1.03f;
+
     [Header("Eje Y")]
     [SerializeField] private bool followCameraY = true;
 
@@ -98,7 +102,7 @@ public class Parallax : MonoBehaviour
             ParallaxLayer layer = layers[i];
             if (!layer.initialized) continue;
 
-            bool useInfinite = enableInfiniteParallax && (layer.infiniteX || (layer.infiniteY && !followCameraY));
+            bool useInfinite = enableInfiniteParallax && (layer.infiniteX || layer.infiniteY);
             if (useInfinite)
             {
                 UpdateInfiniteLayer(layer, camDelta);
@@ -121,6 +125,8 @@ public class Parallax : MonoBehaviour
             return;
         }
 
+        TryFitLayerToCamera(layer, sr);
+
         layer.startX = layer.layer.position.x;
         layer.startY = layer.layer.position.y;
         layer.startZ = layer.layer.position.z;
@@ -139,6 +145,35 @@ public class Parallax : MonoBehaviour
         layer.minY = 0;
         layer.maxY = 0;
         layer.initialized = true;
+    }
+
+    private void TryFitLayerToCamera(ParallaxLayer layer, SpriteRenderer sr)
+    {
+        if (!fitLayersToCamera || layer == null || sr == null || mainCamera == null) return;
+
+        GetCameraBoundsAtZ(layer.layer.position.z, out float camLeft, out float camRight, out float camBottom, out float camTop);
+        float cameraWidth = Mathf.Max(0.0001f, camRight - camLeft);
+        float cameraHeight = Mathf.Max(0.0001f, camTop - camBottom);
+        float currentWidth = Mathf.Max(0.0001f, sr.bounds.size.x);
+        float currentHeight = Mathf.Max(0.0001f, sr.bounds.size.y);
+
+        float requiredWidth = cameraWidth * Mathf.Max(1f, fitPadding);
+        float requiredHeight = cameraHeight * Mathf.Max(1f, fitPadding);
+
+        float widthRatio = layer.infiniteX ? 1f : (requiredWidth / currentWidth);
+        float heightRatio = requiredHeight / currentHeight;
+        float scaleMultiplier = Mathf.Max(1f, widthRatio, heightRatio);
+        if (scaleMultiplier <= 1.0001f) return;
+
+        Vector3 localScale = layer.layer.localScale;
+        float signX = Mathf.Approximately(localScale.x, 0f) ? 1f : Mathf.Sign(localScale.x);
+        float signY = Mathf.Approximately(localScale.y, 0f) ? 1f : Mathf.Sign(localScale.y);
+
+        layer.layer.localScale = new Vector3(
+            signX * Mathf.Abs(localScale.x) * scaleMultiplier,
+            signY * Mathf.Abs(localScale.y) * scaleMultiplier,
+            localScale.z
+        );
     }
 
     private void UpdateSingleLayer(ParallaxLayer layer, Vector3 camDelta)
@@ -189,7 +224,7 @@ public class Parallax : MonoBehaviour
         float baseCenterY = GetTileCenterY(layer, 0, camDelta);
         int neededMinY = 0;
         int neededMaxY = 0;
-        if (layer.infiniteY && !followCameraY)
+        if (layer.infiniteY)
         {
             neededMinY = Mathf.CeilToInt((camBottom - (layer.tileHeight * 0.5f) - baseCenterY) / layer.tileStepY);
             neededMaxY = Mathf.FloorToInt((camTop + (layer.tileHeight * 0.5f) - baseCenterY) / layer.tileStepY);
@@ -396,12 +431,12 @@ public class Parallax : MonoBehaviour
     private void PrewarmLayer(ParallaxLayer layer, Vector3 camDelta)
     {
         if (layer == null || !layer.initialized) return;
-        if (!enableInfiniteParallax || (!layer.infiniteX && !(layer.infiniteY && !followCameraY))) return;
+        if (!enableInfiniteParallax || (!layer.infiniteX && !layer.infiniteY)) return;
 
         int minX = layer.infiniteX ? -prewarmTilesX : 0;
         int maxX = layer.infiniteX ? prewarmTilesX : 0;
-        int minY = (layer.infiniteY && !followCameraY) ? -prewarmTilesY : 0;
-        int maxY = (layer.infiniteY && !followCameraY) ? prewarmTilesY : 0;
+        int minY = layer.infiniteY ? -prewarmTilesY : 0;
+        int maxY = layer.infiniteY ? prewarmTilesY : 0;
 
         for (int x = minX; x <= maxX; x++)
         {

@@ -734,6 +734,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 95daaf73e74c645319df1c486966a841, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::changeScene
+  targetSceneName: The Cave
+  screenFadeDuration: 0.8
+  musicFadeDuration: 0.8
+  fadeColor: {r: 0, g: 0, b: 0, a: 1}
+  fadeSortingOrder: 5000
 --- !u!4 &588087849
 Transform:
   m_ObjectHideFlags: 0
@@ -874,8 +879,8 @@ GameObject:
   - component: {fileID: 1299659065}
   - component: {fileID: 1299659064}
   - component: {fileID: 1299659063}
-  - component: {fileID: 1299659066}
   - component: {fileID: 1299659067}
+  - component: {fileID: 1299659068}
   m_Layer: 0
   m_Name: Play_0
   m_TagString: Untagged
@@ -979,18 +984,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1299659066
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1299659062}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 15127ebb4da6246489768a94fcf23ef9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Play
 --- !u!114 &1299659067
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1047,6 +1040,22 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &1299659068
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299659062}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15127ebb4da6246489768a94fcf23ef9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Play
+  hoverScale: 1.5
+  pressedScale: 0.95
+  hoverCamera: {fileID: 0}
+  hoverRadiusScale: 0.25
 --- !u!1 &1784162153
 GameObject:
   m_ObjectHideFlags: 0

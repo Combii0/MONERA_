@@ -2,14 +2,14 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-[RequireComponent(typeof(RectTransform))]
 public class PixelButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
 {
     [SerializeField] private float hoverScale = 1.08f;
     [SerializeField] private float pressedScale = 0.96f;
 
-    private RectTransform rectTransform;
+    private Transform cachedTransform;
     private Image targetImage;
+    private SpriteRenderer targetSpriteRenderer;
     private Color normalColor = Color.white;
     private Color hoverColor = Color.white;
     private Vector3 baseScale = Vector3.one;
@@ -27,10 +27,38 @@ public class PixelButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExi
         }
     }
 
+    public void Initialize(SpriteRenderer spriteRenderer, Color normal, Color hover)
+    {
+        targetSpriteRenderer = spriteRenderer;
+        normalColor = normal;
+        hoverColor = hover;
+
+        if (targetSpriteRenderer != null)
+        {
+            targetSpriteRenderer.color = normalColor;
+        }
+    }
+
+    public void SetScaleProfile(float hover, float pressed)
+    {
+        hoverScale = Mathf.Max(1f, hover);
+        pressedScale = Mathf.Clamp(pressed, 0.5f, hoverScale);
+    }
+
     private void Awake()
     {
-        rectTransform = GetComponent<RectTransform>();
-        baseScale = rectTransform.localScale;
+        cachedTransform = transform;
+        baseScale = cachedTransform.localScale;
+
+        if (targetImage == null)
+        {
+            targetImage = GetComponent<Image>();
+        }
+
+        if (targetSpriteRenderer == null)
+        {
+            targetSpriteRenderer = GetComponent<SpriteRenderer>();
+        }
     }
 
     public void OnPointerEnter(PointerEventData eventData)
@@ -57,18 +85,22 @@ public class PixelButtonHover : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
     private void ApplyVisual(Vector3 scale, Color color)
     {
-        if (rectTransform != null)
+        if (cachedTransform != null)
         {
-            rectTransform.localScale = new Vector3(
+            cachedTransform.localScale = new Vector3(
                 Mathf.Round(scale.x * 100f) / 100f,
                 Mathf.Round(scale.y * 100f) / 100f,
-                1f
+                Mathf.Round(scale.z * 100f) / 100f
             );
         }
 
         if (targetImage != null)
         {
             targetImage.color = color;
+        }
+        else if (targetSpriteRenderer != null)
+        {
+            targetSpriteRenderer.color = color;
         }
     }
 }

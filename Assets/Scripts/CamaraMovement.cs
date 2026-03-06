@@ -11,6 +11,9 @@ public class CamaraMovement : MonoBehaviour
     [SerializeField] private float smoothTimeY = 0.16f;
     [SerializeField] private float maxSpeedX = 40f;
     [SerializeField] private float maxSpeedY = 30f;
+    [SerializeField] private float stopSmoothingRadiusX = 1.2f;
+    [SerializeField] private float stopSmoothingRadiusY = 1.1f;
+    [SerializeField, Range(0.1f, 1f)] private float stopSpeedMultiplier = 0.42f;
 
     [Header("Comodidad")]
     [SerializeField] private Vector2 deadZoneSize = new Vector2(1.6f, 1.0f);
@@ -21,16 +24,20 @@ public class CamaraMovement : MonoBehaviour
     [Header("Limites")]
     [SerializeField] private bool clampMinY = true;
     [SerializeField] private float minCameraY = -10.5472f;
+    [SerializeField] private bool useDeathYAsMinCameraY = true;
+    [SerializeField] private float minCameraYOffsetFromDeath = 0f;
 
     private Rigidbody2D playerRb;
     private Vector3 focusPoint;
     private float lookAheadCurrent;
     private float velocityX;
     private float velocityY;
+    private bool dynamicMinYResolved;
 
     private void Awake()
     {
         ResolvePlayer();
+        ResolveDynamicMinY();
     }
 
     private void Start()
@@ -48,6 +55,7 @@ public class CamaraMovement : MonoBehaviour
 
     private void LateUpdate()
     {
+        ResolveDynamicMinY();
         if (player == null) return;
 
         UpdateLookAhead();
@@ -64,6 +72,18 @@ public class CamaraMovement : MonoBehaviour
         }
 
         if (player != null) playerRb = player.GetComponent<Rigidbody2D>();
+    }
+
+    private void ResolveDynamicMinY()
+    {
+        if (dynamicMinYResolved || !useDeathYAsMinCameraY) return;
+
+        GameManager gm = FindFirstObjectByType<GameManager>();
+        if (gm == null) return;
+
+        clampMinY = true;
+        minCameraY = gm.InstantDeathY + offset.y + minCameraYOffsetFromDeath;
+        dynamicMinYResolved = true;
     }
 
     private void UpdateLookAhead()
@@ -104,14 +124,55 @@ public class CamaraMovement : MonoBehaviour
     private void UpdateCameraPosition()
     {
         Vector3 desired = focusPoint + offset;
-        float newX = Mathf.SmoothDamp(transform.position.x, desired.x, ref velocityX, Mathf.Max(0.01f, smoothTimeX), maxSpeedX, Time.deltaTime);
-        float newY = Mathf.SmoothDamp(transform.position.y, desired.y, ref velocityY, Mathf.Max(0.01f, smoothTimeY), maxSpeedY, Time.deltaTime);
+        float dynamicMaxSpeedX = ComputeStopSmoothedMaxSpeed(maxSpeedX, Mathf.Abs(desired.x - transform.position.x), stopSmoothingRadiusX);
+        float dynamicMaxSpeedY = ComputeStopSmoothedMaxSpeed(maxSpeedY, Mathf.Abs(desired.y - transform.position.y), stopSmoothingRadiusY);
+
+        float newX = Mathf.SmoothDamp(transform.position.x, desired.x, ref velocityX, Mathf.Max(0.01f, smoothTimeX), dynamicMaxSpeedX, Time.deltaTime);
+        float newY = Mathf.SmoothDamp(transform.position.y, desired.y, ref velocityY, Mathf.Max(0.01f, smoothTimeY), dynamicMaxSpeedY, Time.deltaTime);
         if (clampMinY)
         {
             newY = Mathf.Max(minCameraY, newY);
         }
 
         transform.position = new Vector3(newX, newY, desired.z);
+    }
+
+    private float ComputeStopSmoothedMaxSpeed(float baseSpeed, float distanceToTarget, float radius)
+    {
+        float speed = Mathf.Max(0.01f, baseSpeed);
+        float safeRadius = Mathf.Max(0.001f, radius);
+        if (distanceToTarget >= safeRadius)
+        {
+            return speed;
+        }
+
+        float t = Mathf.Clamp01(distanceToTarget / safeRadius);
+        float easedT = t * t * (3f - (2f * t));
+        float minSpeed = speed * Mathf.Clamp(stopSpeedMultiplier, 0.05f, 1f);
+        return Mathf.Lerp(minSpeed, speed, easedT);
+    }
+
+    public void SnapToPlayerImmediate()
+    {
+        if (player == null)
+        {
+            ResolvePlayer();
+            if (player == null) return;
+        }
+
+        Vector3 playerPos = player.position;
+        playerPos.x += lookAheadCurrent;
+        focusPoint = playerPos;
+
+        Vector3 desired = focusPoint + offset;
+        if (clampMinY)
+        {
+            desired.y = Mathf.Max(minCameraY, desired.y);
+        }
+
+        velocityX = 0f;
+        velocityY = 0f;
+        transform.position = desired;
     }
 
     private void OnDrawGizmosSelected()

@@ -71,7 +71,12 @@ public class Chest : MonoBehaviour
         if (requirePlayerToPassAbove)
         {
             float minY = transform.position.y + minPlayerYFromChestCenter;
-            if (player.transform.position.y < minY) return;
+            if (player.transform.position.y < minY)
+            {
+                // Allow opening from near side contact to avoid strict pivot-dependent misses.
+                float horizontalDistance = Mathf.Abs(player.transform.position.x - transform.position.x);
+                if (horizontalDistance > 0.95f) return;
+            }
         }
 
         OpenChest();
