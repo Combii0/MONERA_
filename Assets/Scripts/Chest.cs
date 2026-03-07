@@ -8,13 +8,13 @@ using UnityEditor;
 public class Chest : MonoBehaviour
 {
     [Header("Cofre")]
-    [SerializeField] private SpriteRenderer chestRenderer;
-    [SerializeField] private Collider2D triggerCollider;
-    [SerializeField] private Sprite closedSprite;
+    [SerializeField, HideInInspector] private SpriteRenderer chestRenderer;
+    [SerializeField, HideInInspector] private Collider2D triggerCollider;
+    [SerializeField, HideInInspector] private Sprite closedSprite;
     [SerializeField] private Sprite openedSprite;
     [SerializeField] private int lifeReward = 1;
-    [SerializeField] private bool requirePlayerToPassAbove = true;
-    [SerializeField] private float minPlayerYFromChestCenter = -0.05f;
+    [SerializeField, HideInInspector] private bool requirePlayerToPassAbove = true;
+    [SerializeField, HideInInspector] private float minPlayerYFromChestCenter = -0.05f;
 
     private bool isOpened;
 

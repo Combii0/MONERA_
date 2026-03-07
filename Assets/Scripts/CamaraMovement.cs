@@ -9,23 +9,23 @@ public class CamaraMovement : MonoBehaviour
     [Header("Suavizado")]
     [SerializeField] private float smoothTimeX = 0.10f;
     [SerializeField] private float smoothTimeY = 0.16f;
-    [SerializeField] private float maxSpeedX = 40f;
-    [SerializeField] private float maxSpeedY = 30f;
-    [SerializeField] private float stopSmoothingRadiusX = 1.2f;
-    [SerializeField] private float stopSmoothingRadiusY = 1.1f;
-    [SerializeField, Range(0.1f, 1f)] private float stopSpeedMultiplier = 0.42f;
+    [SerializeField, HideInInspector] private float maxSpeedX = 40f;
+    [SerializeField, HideInInspector] private float maxSpeedY = 30f;
+    [SerializeField, HideInInspector] private float stopSmoothingRadiusX = 1.2f;
+    [SerializeField, HideInInspector] private float stopSmoothingRadiusY = 1.1f;
+    [SerializeField, Range(0.1f, 1f), HideInInspector] private float stopSpeedMultiplier = 0.42f;
 
     [Header("Comodidad")]
     [SerializeField] private Vector2 deadZoneSize = new Vector2(1.6f, 1.0f);
-    [SerializeField] private float lookAheadDistance = 1.25f;
-    [SerializeField] private float lookAheadThreshold = 0.08f;
-    [SerializeField] private float lookAheadLerpSpeed = 7f;
+    [SerializeField, HideInInspector] private float lookAheadDistance = 1.25f;
+    [SerializeField, HideInInspector] private float lookAheadThreshold = 0.08f;
+    [SerializeField, HideInInspector] private float lookAheadLerpSpeed = 7f;
 
     [Header("Limites")]
     [SerializeField] private bool clampMinY = true;
     [SerializeField] private float minCameraY = -10.5472f;
-    [SerializeField] private bool useDeathYAsMinCameraY = true;
-    [SerializeField] private float minCameraYOffsetFromDeath = 0f;
+    [SerializeField, HideInInspector] private bool useDeathYAsMinCameraY = true;
+    [SerializeField, HideInInspector] private float minCameraYOffsetFromDeath = 0f;
 
     private Rigidbody2D playerRb;
     private Vector3 focusPoint;

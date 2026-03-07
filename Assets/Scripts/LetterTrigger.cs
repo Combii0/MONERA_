@@ -7,32 +7,28 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Collider2D))]
 public class LetterTrigger : MonoBehaviour
 {
-    [SerializeField] private Collider2D triggerCollider;
+    [SerializeField, HideInInspector] private Collider2D triggerCollider;
 
     [Header("Interaccion")]
     [SerializeField] private bool requireInteractKey = true;
-    [SerializeField] private KeyCode interactKey = KeyCode.E;
-    [SerializeField] private Vector3 promptOffset = new Vector3(0f, 1.05f, 0f);
-    [SerializeField] private float promptFontSize = 1.4f;
-    [SerializeField] private int promptSortingOrderBoost = 60;
-
-    [Header("Animacion Prompt")]
-    [SerializeField] private float promptShowDuration = 0.12f;
-    [SerializeField] private float promptHideDuration = 0.14f;
-    [SerializeField] private float promptPopScale = 1.08f;
-    [SerializeField] private float promptIdleFloatAmplitude = 0.03f;
-    [SerializeField] private float promptIdleFloatSpeed = 4.2f;
+    [SerializeField, HideInInspector] private KeyCode interactKey = KeyCode.E;
+    [SerializeField, HideInInspector] private Vector3 promptOffset = new Vector3(0f, 1.05f, 0f);
+    [SerializeField, HideInInspector] private float promptFontSize = 1.4f;
+    [SerializeField, HideInInspector] private int promptSortingOrderBoost = 60;
+    [SerializeField, HideInInspector] private TMP_FontAsset promptFont;
+    [SerializeField, HideInInspector] private float promptPopDuration = 0.16f;
+    [SerializeField, HideInInspector] private float promptPulseAmplitude = 0.045f;
+    [SerializeField, HideInInspector] private float promptPulseSpeed = 7.5f;
 
     private PlayerMovement playerInRange;
     private GameObject promptRoot;
     private TextMeshPro promptText;
     private SpriteRenderer sourceRenderer;
-    private bool promptTargetVisible;
-    private float promptVisibility;
+    private GameManager cachedGameManager;
+    private bool promptSuppressedByStoryMessage;
+    private float promptAnimTimer;
 
     private const float DefaultPromptFontSize = 1.4f;
-    private const float DefaultShowDuration = 0.12f;
-    private const float DefaultHideDuration = 0.14f;
 
     private void Awake()
     {
@@ -40,58 +36,45 @@ public class LetterTrigger : MonoBehaviour
         EnsureTriggerCollider();
         sourceRenderer = GetComponentInParent<SpriteRenderer>();
         EnsurePromptVisual();
-        promptVisibility = 0f;
-        promptTargetVisible = false;
         SetPromptVisible(false);
-        UpdatePromptAnimation(true);
+        CacheGameManager();
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        RegisterPlayer(other);
-    }
-
-    private void OnTriggerStay2D(Collider2D other)
-    {
-        RegisterPlayer(other);
-    }
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        RegisterPlayer(collision.collider);
-    }
-
-    private void OnCollisionStay2D(Collision2D collision)
-    {
-        RegisterPlayer(collision.collider);
-    }
-
-    private void OnTriggerExit2D(Collider2D other)
-    {
-        UnregisterPlayer(other);
-    }
-
-    private void OnCollisionExit2D(Collision2D collision)
-    {
-        UnregisterPlayer(collision.collider);
-    }
+    private void OnTriggerEnter2D(Collider2D other) => RegisterPlayer(other);
+    private void OnTriggerStay2D(Collider2D other) => RegisterPlayer(other);
+    private void OnCollisionEnter2D(Collision2D collision) => RegisterPlayer(collision.collider);
+    private void OnCollisionStay2D(Collision2D collision) => RegisterPlayer(collision.collider);
+    private void OnTriggerExit2D(Collider2D other) => UnregisterPlayer(other);
+    private void OnCollisionExit2D(Collision2D collision) => UnregisterPlayer(collision.collider);
 
     private void Update()
     {
-        if (playerInRange != null)
-        {
-            if (promptRoot != null)
-            {
-                promptRoot.transform.localPosition = promptOffset;
-            }
+        if (playerInRange == null) return;
 
-            if (!requireInteractKey || WasInteractPressedThisFrame())
-            {
-                TryTriggerLevelEnd(playerInRange);
-            }
+        if (promptRoot != null)
+        {
+            promptRoot.transform.localPosition = promptOffset;
         }
 
+        if (IsStoryMessageActive())
+        {
+            promptSuppressedByStoryMessage = true;
+            SetPromptVisible(false);
+            return;
+        }
+
+        if (promptSuppressedByStoryMessage)
+        {
+            promptSuppressedByStoryMessage = false;
+        }
+
+        SetPromptVisible(true);
         UpdatePromptAnimation();
+
+        if (!requireInteractKey || WasInteractPressedThisFrame())
+        {
+            TryTriggerLevelEnd(playerInRange);
+        }
     }
 
     private void RegisterPlayer(Collider2D other)
@@ -102,6 +85,14 @@ public class LetterTrigger : MonoBehaviour
         if (player == null) return;
 
         playerInRange = player;
+
+        if (IsStoryMessageActive())
+        {
+            promptSuppressedByStoryMessage = true;
+            SetPromptVisible(false);
+            return;
+        }
+
         SetPromptVisible(true);
     }
 
@@ -113,6 +104,7 @@ public class LetterTrigger : MonoBehaviour
         if (player == null || player != playerInRange) return;
 
         playerInRange = null;
+        promptSuppressedByStoryMessage = false;
         SetPromptVisible(false);
     }
 
@@ -120,13 +112,23 @@ public class LetterTrigger : MonoBehaviour
     {
         if (player == null) return;
 
-        GameManager gm = GameManager.Instance;
-        if (gm == null) gm = FindFirstObjectByType<GameManager>();
-        if (gm == null) return;
-        if (!gm.TriggerLetterEnding(transform)) return;
+        CacheGameManager();
+        if (cachedGameManager == null) return;
+        if (!cachedGameManager.TriggerLetterEnding(transform)) return;
 
         playerInRange = null;
+        promptSuppressedByStoryMessage = true;
         SetPromptVisible(false);
+    }
+
+    private void CacheGameManager()
+    {
+        if (cachedGameManager != null) return;
+        cachedGameManager = GameManager.Instance;
+        if (cachedGameManager == null)
+        {
+            cachedGameManager = FindFirstObjectByType<GameManager>();
+        }
     }
 
     private void EnsureTriggerCollider()
@@ -144,24 +146,16 @@ public class LetterTrigger : MonoBehaviour
 
     private void EnsurePromptVisual()
     {
-        if (promptRoot == null)
-        {
-            Transform existingRoot = transform.Find("InteractPrompt_E");
-            if (existingRoot != null)
-            {
-                promptRoot = existingRoot.gameObject;
-            }
-        }
+        CachePromptReferencesFromHierarchy();
 
         if (promptRoot == null)
         {
             promptRoot = new GameObject("InteractPrompt_E");
             promptRoot.transform.SetParent(transform, false);
         }
+
         promptRoot.transform.localPosition = promptOffset;
 
-        RemovePromptChild("Ring");
-        RemovePromptChild("Circle");
         SpriteRenderer rootSprite = promptRoot.GetComponent<SpriteRenderer>();
         if (rootSprite != null) rootSprite.enabled = false;
 
@@ -173,6 +167,7 @@ public class LetterTrigger : MonoBehaviour
                 promptText = label.GetComponent<TextMeshPro>();
             }
         }
+
         if (promptText == null)
         {
             GameObject labelObj = new GameObject("Label");
@@ -191,6 +186,21 @@ public class LetterTrigger : MonoBehaviour
         RectTransform textRect = promptText.rectTransform;
         textRect.sizeDelta = new Vector2(2f, 2f);
 
+        TMP_FontAsset resolvedPromptFont = ResolvePromptFont();
+        if (resolvedPromptFont != null)
+        {
+            promptText.enabled = true;
+            promptText.font = resolvedPromptFont;
+            if (resolvedPromptFont.material != null)
+            {
+                promptText.fontSharedMaterial = resolvedPromptFont.material;
+            }
+        }
+        else
+        {
+            promptText.enabled = false;
+        }
+
         MeshRenderer textRenderer = promptText.GetComponent<MeshRenderer>();
         if (textRenderer != null)
         {
@@ -204,68 +214,90 @@ public class LetterTrigger : MonoBehaviour
         }
     }
 
-    private void RemovePromptChild(string childName)
+    private void CachePromptReferencesFromHierarchy()
     {
-        if (promptRoot == null) return;
-        Transform child = promptRoot.transform.Find(childName);
-        if (child == null) return;
-
-        if (Application.isPlaying)
+        if (promptRoot == null)
         {
-            Destroy(child.gameObject);
+            Transform existingRoot = transform.Find("InteractPrompt_E");
+            if (existingRoot != null)
+            {
+                promptRoot = existingRoot.gameObject;
+            }
         }
-        else
+
+        if (promptText == null && promptRoot != null)
         {
-            DestroyImmediate(child.gameObject);
+            Transform label = promptRoot.transform.Find("Label");
+            if (label != null)
+            {
+                promptText = label.GetComponent<TextMeshPro>();
+            }
         }
     }
 
     private void SetPromptVisible(bool visible)
     {
         if (promptRoot == null) return;
-        promptTargetVisible = visible;
-        if (promptTargetVisible && !promptRoot.activeSelf)
+
+        bool wasVisible = promptRoot.activeSelf;
+        if (visible)
         {
-            promptRoot.SetActive(true);
+            if (!wasVisible)
+            {
+                promptAnimTimer = 0f;
+                promptRoot.transform.localScale = Vector3.one * 0.72f;
+                promptRoot.SetActive(true);
+            }
+            return;
         }
-    }
 
-    private void UpdatePromptAnimation(bool immediate = false)
-    {
-        if (promptRoot == null || promptText == null) return;
-
-        float target = promptTargetVisible ? 1f : 0f;
-        float duration = target > promptVisibility
-            ? Mathf.Max(0.01f, promptShowDuration)
-            : Mathf.Max(0.01f, promptHideDuration);
-
-        float step = immediate ? 1f : Time.deltaTime / duration;
-        promptVisibility = Mathf.MoveTowards(promptVisibility, target, step);
-
-        float eased = EaseInOut(promptVisibility);
-        float popMul = Mathf.Lerp(Mathf.Max(1f, promptPopScale), 1f, eased);
-
-        float bob = Mathf.Sin(Time.unscaledTime * Mathf.Max(0.1f, promptIdleFloatSpeed))
-            * Mathf.Max(0f, promptIdleFloatAmplitude) * eased;
-        promptRoot.transform.localPosition = promptOffset + new Vector3(0f, bob, 0f);
-
-        Color textColor = promptText.color;
-        textColor.a = eased;
-        promptText.color = textColor;
-
-        promptText.transform.localScale = Vector3.one * Mathf.Lerp(0.6f, 1f, eased) * popMul;
-        promptText.transform.localPosition = new Vector3(0f, Mathf.Lerp(-0.03f, 0f, eased), -0.01f);
-
-        if (!promptTargetVisible && promptVisibility <= 0.0001f && promptRoot.activeSelf)
+        if (wasVisible)
         {
             promptRoot.SetActive(false);
         }
+        promptAnimTimer = 0f;
+        promptRoot.transform.localScale = Vector3.one;
     }
 
-    private static float EaseInOut(float t)
+    private void UpdatePromptAnimation()
     {
-        t = Mathf.Clamp01(t);
-        return t * t * (3f - (2f * t));
+        if (promptRoot == null || !promptRoot.activeSelf) return;
+
+        promptAnimTimer += Time.unscaledDeltaTime;
+
+        float popDuration = Mathf.Max(0.05f, promptPopDuration);
+        float popT = Mathf.Clamp01(promptAnimTimer / popDuration);
+        float popScale = Mathf.Lerp(0.72f, 1f, popT);
+
+        float pulseScale = 1f;
+        if (popT >= 0.999f)
+        {
+            float amplitude = Mathf.Clamp(promptPulseAmplitude, 0f, 0.35f);
+            float speed = Mathf.Max(0.1f, promptPulseSpeed);
+            pulseScale += Mathf.Sin(promptAnimTimer * speed) * amplitude;
+        }
+
+        float finalScale = Mathf.Max(0.01f, popScale * pulseScale);
+        promptRoot.transform.localScale = new Vector3(finalScale, finalScale, 1f);
+    }
+
+    private bool IsStoryMessageActive()
+    {
+        CacheGameManager();
+        return cachedGameManager != null && cachedGameManager.IsStoryMessageVisible;
+    }
+
+    private TMP_FontAsset ResolvePromptFont()
+    {
+        if (promptFont != null) return promptFont;
+
+        promptFont = TMP_Settings.defaultFontAsset;
+        if (promptFont == null)
+        {
+            promptFont = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
+        }
+
+        return promptFont;
     }
 
     private bool WasInteractPressedThisFrame()
@@ -292,9 +324,9 @@ public class LetterTrigger : MonoBehaviour
     {
         if (promptFontSize <= 0f) promptFontSize = DefaultPromptFontSize;
         promptFontSize = Mathf.Clamp(promptFontSize, 0.8f, 1.8f);
-        if (promptShowDuration <= 0f) promptShowDuration = DefaultShowDuration;
-        if (promptHideDuration <= 0f) promptHideDuration = DefaultHideDuration;
-        promptPopScale = Mathf.Max(1f, promptPopScale);
+        promptPopDuration = Mathf.Max(0.05f, promptPopDuration);
+        promptPulseAmplitude = Mathf.Clamp(promptPulseAmplitude, 0f, 0.35f);
+        promptPulseSpeed = Mathf.Max(0.1f, promptPulseSpeed);
     }
 
 #if UNITY_EDITOR
@@ -302,10 +334,25 @@ public class LetterTrigger : MonoBehaviour
     {
         NormalizePromptSettings();
         EnsureTriggerCollider();
+        CachePromptReferencesFromHierarchy();
 
         if (promptText != null)
         {
             promptText.fontSize = Mathf.Max(0.8f, promptFontSize);
+            TMP_FontAsset resolvedPromptFont = ResolvePromptFont();
+            if (resolvedPromptFont != null)
+            {
+                promptText.enabled = true;
+                promptText.font = resolvedPromptFont;
+                if (resolvedPromptFont.material != null)
+                {
+                    promptText.fontSharedMaterial = resolvedPromptFont.material;
+                }
+            }
+            else
+            {
+                promptText.enabled = false;
+            }
         }
 
         if (promptRoot != null)

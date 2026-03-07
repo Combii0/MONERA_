@@ -13,13 +13,39 @@ public class changeScene : MonoBehaviour
     [SerializeField] private float musicFadeDuration = 0.8f;
     [SerializeField] private Color fadeColor = Color.black;
     [SerializeField] private int fadeSortingOrder = 5000;
+    [SerializeField] private bool forceStartupUiAnimations = true;
 
     private bool isTransitioning;
+
+    private void Start()
+    {
+        Time.timeScale = 1f;
+        if (forceStartupUiAnimations)
+        {
+            EnsureStartupUiAnimations();
+        }
+    }
 
     public void CAmbiar()
     {
         if (isTransitioning) return;
         StartCoroutine(TransitionToSceneRoutine());
+    }
+
+    private void EnsureStartupUiAnimations()
+    {
+        Animator[] animators = FindObjectsByType<Animator>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        for (int i = 0; i < animators.Length; i++)
+        {
+            Animator animator = animators[i];
+            if (animator == null || animator.runtimeAnimatorController == null) continue;
+
+            animator.enabled = true;
+            animator.updateMode = AnimatorUpdateMode.Normal;
+            animator.Rebind();
+            animator.Update(0f);
+            animator.Play(0, 0, 0f);
+        }
     }
 
     private IEnumerator TransitionToSceneRoutine()

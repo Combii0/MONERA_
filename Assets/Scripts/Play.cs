@@ -7,8 +7,8 @@ public class Play : MonoBehaviour
 {
     [SerializeField] private float hoverScale = 1.12f;
     [SerializeField] private float pressedScale = 0.95f;
-    [SerializeField] private Camera hoverCamera;
-    [SerializeField, Range(0.1f, 0.8f)] private float hoverRadiusScale = 0.4f;
+    [SerializeField, HideInInspector] private Camera hoverCamera;
+    [SerializeField, Range(0.1f, 0.8f), HideInInspector] private float hoverRadiusScale = 0.4f;
 
     private Vector3 baseScale;
     private SpriteRenderer spriteRenderer;
@@ -31,9 +31,19 @@ public class Play : MonoBehaviour
     {
         if (spriteRenderer == null || hoverCamera == null) return;
 
-        if (!TryGetPointerPosition(out Vector2 pointerScreenPos)) return;
+        if (!TryGetPointerPosition(out Vector2 pointerScreenPos) || !hoverCamera.pixelRect.Contains(pointerScreenPos))
+        {
+            if (!isHovered && !isPressed) return;
 
-        Vector3 pointerWorldPos = hoverCamera.ScreenToWorldPoint(pointerScreenPos);
+            isHovered = false;
+            isPressed = false;
+            ApplyCurrentScale();
+            return;
+        }
+
+        float cameraDistance = Mathf.Abs(hoverCamera.transform.position.z - spriteRenderer.bounds.center.z);
+        Vector3 pointerScreenPoint = new Vector3(pointerScreenPos.x, pointerScreenPos.y, Mathf.Max(0.01f, cameraDistance));
+        Vector3 pointerWorldPos = hoverCamera.ScreenToWorldPoint(pointerScreenPoint);
         pointerWorldPos.z = spriteRenderer.bounds.center.z;
         Vector3 center = spriteRenderer.bounds.center;
         float radius = Mathf.Min(spriteRenderer.bounds.extents.x, spriteRenderer.bounds.extents.y) * hoverRadiusScale;

@@ -106,6 +106,8 @@ GameObject:
   - component: {fileID: 5844757730763201362}
   - component: {fileID: 399068912976588361}
   - component: {fileID: 1807836632443683642}
+  - component: {fileID: 866410581703828959}
+  - component: {fileID: 2593691720346202585}
   m_Layer: 0
   m_Name: Bacteria
   m_TagString: Untagged
@@ -203,7 +205,7 @@ Rigidbody2D:
   m_Mass: 1
   m_LinearDamping: 0
   m_AngularDamping: 0.05
-  m_GravityScale: 1
+  m_GravityScale: 0
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -224,67 +226,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 3899257129264653281}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8b9d00cb18885b94086f8bf24f08a0ad, type: 3}
+  m_Script: {fileID: 11500000, guid: 3efac8a69f6293a41a14f2600fc1e663, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyMovement
+  m_EditorClassIdentifier: Assembly-CSharp::BacteriaLogic
+  speed: 3.5
+  chaseAcceleration: 20
+  chaseDeceleration: 28
+  stoppingDistance: 0.3
   requireDetectionToChase: 1
-  detectionOnlyForBlueAndGreenBacteria: 1
+  playerTag: Player
   detectionRadiusInTiles: 6
   tileSizeWorldUnits: 1
   detectionRaycastMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  playerTag: Player
   invulnerableWhileIdle: 1
+  useDetectionRadius: 1
+  detectionRadius: 8
+  aggroLoseTime: 5
   idleSpinSpeedDegrees: 35
   idleSpinClockwise: 1
   cianBacteriaCircle: {fileID: 3400159637119347967}
   cianCircleFadeDuration: 0.35
-  target: {fileID: 0}
-  speed: 3.5
-  stoppingDistance: 0.3
-  chaseAcceleration: 20
-  chaseDeceleration: 28
-  stopVelocityEpsilon: 0.08
-  isCoral: 0
-  coralTilesToMove: 3
-  coralTileSize: 1
-  coralMoveSpeed: 0.8
-  coralSmoothTime: 0.2
-  coralArrivalDistance: 0.02
-  coralPauseAtEnds: 0.08
-  delayStartMovingCoralTime: 0
-  spriteRenderer: {fileID: 7121793220950405923}
-  animator: {fileID: 5844757730763201362}
-  animatorController: {fileID: 9100000, guid: 8acbbfc4591b9411fadce3ee4a861a65, type: 2}
-  movingStateName: GreenBacteriaMoving
-  movingClipKey: GreenBacteriaMoving
-  movingClip: {fileID: 7400000, guid: ca1d1494308fe41d38c07354155d3da7, type: 2}
-  deathStateName: OVER
-  deathClipKey: GreenBacteriaOver
-  deathClip: {fileID: 7400000, guid: 853b653f483c64dd395c4fae1d27d10b, type: 2}
-  deathPopScale: 1.1
-  deathFadeOutDuration: 0.24
-  maxHealth: 2
-  hitCooldown: 0.08
-  destroyDelayAfterDeath: 0
-  damageTags:
-  - PlayerAttack
-  - Projectile
-  destroyDamageSourceOnHit: 0
-  damageFlashColor: {r: 1, g: 0.16, b: 0.16, a: 1}
-  damageFlashStrength: 0.9
-  damageFlashDuration: 0.12
-  sfxSource: {fileID: 1807836632443683642}
-  hitSfx: {fileID: 0}
-  hitSfxVolume: 0.9
-  showHealthBar: 1
-  healthBarYOffset: 0.24
-  healthBarWorldWidth: 0.7
-  healthBarWorldHeight: 0.08
-  healthBarBackgroundColor: {r: 0, g: 0, b: 0, a: 0.65}
-  healthBarFillColor: {r: 0.26, g: 1, b: 0.33, a: 1}
-  healthBarSortingOffset: 8
 --- !u!95 &5844757730763201362
 Animator:
   serializedVersion: 7
@@ -450,3 +413,43 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &866410581703828959
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3899257129264653281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a607e4bbd4a2d74982307821b8c3eaa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
+  maxHealth: 2
+  hitCooldown: 0.08
+  damageTags:
+  - PlayerAttack
+  - Projectile
+  healthBarPrefab: {fileID: 7167031276324826369, guid: 81abe527312192648a1d0ce340576823, type: 3}
+  healthBarYOffset: 0.5
+  sfxSource: {fileID: 0}
+  hitSfx: {fileID: 0}
+  hitSfxVolume: 0.9
+  damageFlashColor: {r: 1, g: 0.16, b: 0.16, a: 1}
+  damageFlashStrength: 0.9
+  isInvulnerable: 0
+--- !u!114 &2593691720346202585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3899257129264653281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efd01944c740a814cab7d3751fc52465, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyVisuals
+  movingStateName: MOVING
+  deathStateName: OVER
+  deathClip: {fileID: 7400000, guid: 853b653f483c64dd395c4fae1d27d10b, type: 2}
