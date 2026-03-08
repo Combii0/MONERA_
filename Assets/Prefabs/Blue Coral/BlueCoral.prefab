@@ -14,7 +14,6 @@ GameObject:
   - component: {fileID: 7086115743378611632}
   - component: {fileID: 2090331381481658460}
   - component: {fileID: 288101029011746887}
-  - component: {fileID: 6993948938570601035}
   - component: {fileID: 7595523270813423018}
   - component: {fileID: 1804719970821666275}
   - component: {fileID: -635036692160860530}
@@ -281,21 +280,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &6993948938570601035
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5621316386019653120}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: efd01944c740a814cab7d3751fc52465, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyVisuals
-  movingStateName: MOVING
-  deathStateName: OVER
-  deathClip: {fileID: 7400000, guid: 91b097a4df8745b47be9b16eca4f2d9d, type: 2}
 --- !u!114 &7595523270813423018
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -308,7 +292,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a607e4bbd4a2d74982307821b8c3eaa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
-  maxHealth: 4
+  maxHealth: 3
   hitCooldown: 0.08
   damageTags:
   - PlayerAttack
