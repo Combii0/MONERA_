@@ -42,6 +42,12 @@ public class GameManager : MonoBehaviour
 
     [Header("Muerte por Caida")]
     [SerializeField] private float instantDeathY = -12f;
+    [SerializeField, Min(0f)] private float fallDeathExtraDepth = 10f;
+
+    [Header("Audio Muerte por Caida")]
+    [SerializeField] private AudioSource sfxAudioSource;
+    [SerializeField] private AudioClip fallDeathSfx;
+    [SerializeField, Range(0f, 1f)] private float fallDeathSfxVolume = 1f;
 
     [Header("Visor de Pantalla (Hierarchical UI)")]
     [SerializeField] private Canvas deathCanvas;
@@ -64,6 +70,7 @@ public class GameManager : MonoBehaviour
 
     public static GameManager Instance { get; private set; }
     public float InstantDeathY => instantDeathY;
+    private float FallDeathTriggerY => instantDeathY - fallDeathExtraDepth;
 
     private void Awake()
     {
@@ -97,7 +104,7 @@ public class GameManager : MonoBehaviour
             if (player == null) return;
         }
 
-        if (player.transform.position.y < instantDeathY)
+        if (player.transform.position.y < FallDeathTriggerY)
         {
             TriggerInstantDeathByFall();
         }
@@ -248,9 +255,20 @@ public class GameManager : MonoBehaviour
 
     private void TriggerInstantDeathByFall()
     {
+        PlayFallDeathSfx();
         currentLives = 0;
         RefreshHpLabel();
         StartDeathSequence();
+    }
+
+    private void PlayFallDeathSfx()
+    {
+        if (fallDeathSfx == null) return;
+
+        if (sfxAudioSource != null)
+        {
+            sfxAudioSource.PlayOneShot(fallDeathSfx, Mathf.Clamp01(fallDeathSfxVolume));
+        }
     }
 
     private IEnumerator FadeInRoutine()

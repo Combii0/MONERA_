@@ -24,20 +24,16 @@ public class CamaraMovement : MonoBehaviour
     [Header("Limites")]
     [SerializeField] private bool clampMinY = true;
     [SerializeField] private float minCameraY = -10.5472f;
-    [SerializeField, HideInInspector] private bool useDeathYAsMinCameraY = true;
-    [SerializeField, HideInInspector] private float minCameraYOffsetFromDeath = 0f;
 
     private Rigidbody2D playerRb;
     private Vector3 focusPoint;
     private float lookAheadCurrent;
     private float velocityX;
     private float velocityY;
-    private bool dynamicMinYResolved;
 
     private void Awake()
     {
         ResolvePlayer();
-        ResolveDynamicMinY();
     }
 
     private void Start()
@@ -55,7 +51,6 @@ public class CamaraMovement : MonoBehaviour
 
     private void LateUpdate()
     {
-        ResolveDynamicMinY();
         if (player == null) return;
 
         UpdateLookAhead();
@@ -72,18 +67,6 @@ public class CamaraMovement : MonoBehaviour
         }
 
         if (player != null) playerRb = player.GetComponent<Rigidbody2D>();
-    }
-
-    private void ResolveDynamicMinY()
-    {
-        if (dynamicMinYResolved || !useDeathYAsMinCameraY) return;
-
-        GameManager gm = FindFirstObjectByType<GameManager>();
-        if (gm == null) return;
-
-        clampMinY = true;
-        minCameraY = gm.InstantDeathY + offset.y + minCameraYOffsetFromDeath;
-        dynamicMinYResolved = true;
     }
 
     private void UpdateLookAhead()
