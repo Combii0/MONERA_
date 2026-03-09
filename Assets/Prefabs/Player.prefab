@@ -253,6 +253,7 @@ MonoBehaviour:
   damageFlashColor: {r: 1, g: 0.16, b: 0.16, a: 1}
   damageFlashStrength: 0.92
   enableShooting: 1
+  projectilePrefab: {fileID: 2131880803640463534, guid: b58b01d9bdfb5f8418ed2fe1acec0c99, type: 3}
   projectileSprite: {fileID: -1935656848456677730, guid: 0f03cbebd3e9f4186a6261b8f408aba5, type: 3}
   projectileSpeed: 14
   projectileDamage: 1

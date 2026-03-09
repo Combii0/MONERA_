@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.Serialization;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -22,8 +23,13 @@ public class Letter : MonoBehaviour
     [SerializeField] private bool requireInteractKey = true;
     [SerializeField] private KeyCode interactKey = KeyCode.E;
     [SerializeField] private Vector3 promptOffset = new Vector3(0f, 1.05f, 0f);
-    [SerializeField] private float promptFontSize = 1.4f;
     [SerializeField] private int promptSortingOrderBoost = 60;
+    
+    [Header("Tamaño")]
+    [FormerlySerializedAs("promptFontSize")]
+    [SerializeField] public float interactPromptFontSize = 1.4f;
+    [SerializeField] public float interactPromptScale = 2.4f;
+    [SerializeField] public float letterScreenFontSize = 38f;
 
     [Header("Animacion Prompt")]
     [SerializeField] private float promptShowDuration = 0.12f;
@@ -79,7 +85,7 @@ public class Letter : MonoBehaviour
                 if (isReading)
                 {
                     // Si el manager está leyendo, ocultamos la letra "E" y no leemos el Input
-                    SetPromptVisible(false);
+                    HidePromptImmediate();
                 }
                 else
                 {
@@ -104,6 +110,7 @@ public class Letter : MonoBehaviour
         PlayerMovement player = other.GetComponentInParent<PlayerMovement>();
         if (player == null) return;
         if (!CanInteractWithPlayer(player)) return;
+        if (LetterManager.Instance != null && LetterManager.Instance.IsReading) return;
 
         playerInRange = player;
         SetPromptVisible(true);
@@ -137,7 +144,8 @@ public class Letter : MonoBehaviour
         // ENVIAR EL TEXTO Y EL JUGADOR AL LETTER MANAGER
         if (LetterManager.Instance != null)
         {
-            LetterManager.Instance.ReadLetter(screenMessage, player); // <-- ¡Añadido el player aquí!
+            HidePromptImmediate();
+            LetterManager.Instance.ReadLetter(screenMessage, player, letterScreenFontSize);
         }
         else
         {
@@ -185,14 +193,17 @@ public class Letter : MonoBehaviour
 
         promptText.text = "E";
         promptText.alignment = TextAlignmentOptions.Center;
-        promptText.fontSize = Mathf.Max(0.8f, promptFontSize);
+        promptText.enableAutoSizing = false;
+        promptText.fontSize = Mathf.Max(0.2f, interactPromptFontSize);
         promptText.color = Color.white;
         promptText.fontStyle = FontStyles.Bold;
         promptText.textWrappingMode = TextWrappingModes.NoWrap;
+        promptText.overflowMode = TextOverflowModes.Overflow;
         promptText.transform.localPosition = new Vector3(0f, 0f, -0.01f);
 
         RectTransform textRect = promptText.rectTransform;
-        textRect.sizeDelta = new Vector2(2f, 2f);
+        float rectSize = Mathf.Max(2f, interactPromptFontSize * Mathf.Max(1f, interactPromptScale) * 1.5f);
+        textRect.sizeDelta = new Vector2(rectSize, rectSize);
 
         MeshRenderer textRenderer = promptText.GetComponent<MeshRenderer>();
         if (textRenderer != null)
@@ -224,6 +235,20 @@ public class Letter : MonoBehaviour
         if (promptTargetVisible && !promptRoot.activeSelf) promptRoot.SetActive(true);
     }
 
+    private void HidePromptImmediate()
+    {
+        if (promptRoot == null || promptText == null) return;
+
+        promptTargetVisible = false;
+        promptVisibility = 0f;
+
+        Color c = promptText.color;
+        c.a = 0f;
+        promptText.color = c;
+
+        if (promptRoot.activeSelf) promptRoot.SetActive(false);
+    }
+
     private void UpdatePromptAnimation(bool immediate = false)
     {
         if (promptRoot == null || promptText == null) return;
@@ -244,7 +269,9 @@ public class Letter : MonoBehaviour
         textColor.a = eased;
         promptText.color = textColor;
 
-        promptText.transform.localScale = Vector3.one * Mathf.Lerp(0.6f, 1f, eased) * popMul;
+        promptText.fontSize = Mathf.Max(0.2f, interactPromptFontSize);
+        float promptScaleMul = Mathf.Max(0.2f, interactPromptScale);
+        promptText.transform.localScale = Vector3.one * Mathf.Lerp(0.6f, 1f, eased) * popMul * promptScaleMul;
         promptText.transform.localPosition = new Vector3(0f, Mathf.Lerp(-0.03f, 0f, eased), -0.01f);
 
         if (!promptTargetVisible && promptVisibility <= 0.0001f && promptRoot.activeSelf) promptRoot.SetActive(false);
@@ -282,8 +309,12 @@ public class Letter : MonoBehaviour
 
     private void NormalizePromptSettings()
     {
-        if (promptFontSize <= 0f) promptFontSize = DefaultPromptFontSize;
-        promptFontSize = Mathf.Clamp(promptFontSize, 0.8f, 1.8f);
+        if (interactPromptFontSize <= 0f) interactPromptFontSize = DefaultPromptFontSize;
+        interactPromptFontSize = Mathf.Clamp(interactPromptFontSize, 0.2f, 20f);
+        if (interactPromptScale <= 0f) interactPromptScale = 2.4f;
+        interactPromptScale = Mathf.Clamp(interactPromptScale, 0.2f, 12f);
+        if (letterScreenFontSize <= 0f) letterScreenFontSize = 38f;
+        letterScreenFontSize = Mathf.Clamp(letterScreenFontSize, 6f, 220f);
         if (promptShowDuration <= 0f) promptShowDuration = DefaultShowDuration;
         if (promptHideDuration <= 0f) promptHideDuration = DefaultHideDuration;
         promptPopScale = Mathf.Max(1f, promptPopScale);
@@ -294,7 +325,14 @@ public class Letter : MonoBehaviour
     {
         NormalizePromptSettings();
         EnsureLetterCollider();
-        if (promptText != null) promptText.fontSize = Mathf.Max(0.8f, promptFontSize);
+        if (promptText != null)
+        {
+            promptText.enableAutoSizing = false;
+            promptText.fontSize = Mathf.Max(0.2f, interactPromptFontSize);
+            RectTransform textRect = promptText.rectTransform;
+            float rectSize = Mathf.Max(2f, interactPromptFontSize * Mathf.Max(1f, interactPromptScale) * 1.5f);
+            textRect.sizeDelta = new Vector2(rectSize, rectSize);
+        }
         if (promptRoot != null) promptRoot.transform.localPosition = promptOffset;
     }
 #endif

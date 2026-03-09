@@ -1,22 +1,19 @@
 fileFormatVersion: 2
-guid: ae174b136c77f48d1baf31f82847401d
+guid: 36a7f89b759a74cab98028709004d341
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 1455103160680066063
-    second: Amoeba_0
+      213: -126702136820499345
+    second: smallAmebaOver_0
   - first:
-      213: -8004411440715984816
-    second: Amoeba_1
+      213: -3806773938352586182
+    second: smallAmebaOver_1
   - first:
-      213: 7713683848185006026
-    second: Amoeba_2
+      213: 4806338624554146786
+    second: smallAmebaOver_2
   - first:
-      213: -6346393454515187630
-    second: Amoeba_3
-  - first:
-      213: -8476467402985615744
-    second: Amoeba_4
+      213: 1493699685183041641
+    second: smallAmebaOver_3
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -125,111 +122,89 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Amoeba_0
+      name: smallAmebaOver_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 33
-        height: 31
+        width: 32
+        height: 32
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: f0c22eb7d90913410800000000000000
-      internalID: 1455103160680066063
+      spriteID: f6cf78ee31ddd3ef0800000000000000
+      internalID: -126702136820499345
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Amoeba_1
+      name: smallAmebaOver_1
       rect:
         serializedVersion: 2
-        x: 34
-        y: 1
-        width: 28
-        height: 27
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 0501d00343e9ae090800000000000000
-      internalID: -8004411440715984816
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Amoeba_2
-      rect:
-        serializedVersion: 2
-        x: 70
-        y: 4
-        width: 22
-        height: 23
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: ac74cb057928c0b60800000000000000
-      internalID: 7713683848185006026
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Amoeba_3
-      rect:
-        serializedVersion: 2
-        x: 98
-        y: 1
-        width: 28
-        height: 28
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 25012ca17c41de7a0800000000000000
-      internalID: -6346393454515187630
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: Amoeba_4
-      rect:
-        serializedVersion: 2
-        x: 128
+        x: 32
         y: 0
         width: 32
         height: 32
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 08e4dd6aec98d5a80800000000000000
-      internalID: -8476467402985615744
+      spriteID: a328740b54f9b2bc0800000000000000
+      internalID: -3806773938352586182
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: smallAmebaOver_2
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 0
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2eb1ac2938b83b240800000000000000
+      internalID: 4806338624554146786
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: smallAmebaOver_3
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 0
+        width: 32
+        height: 32
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 960b27023ffaab410800000000000000
+      internalID: 1493699685183041641
       vertices: []
       indices: 
       edges: []
@@ -238,7 +213,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 8b8bef06021de49298d577cdf7783455
     internalID: 0
     vertices: []
     indices: 
@@ -246,13 +221,14 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":32.0,"y":32.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      Amoeba_0: 1455103160680066063
-      Amoeba_1: -8004411440715984816
-      Amoeba_2: 7713683848185006026
-      Amoeba_3: -6346393454515187630
-      Amoeba_4: -8476467402985615744
+      smallAmebaOver_0: -126702136820499345
+      smallAmebaOver_1: -3806773938352586182
+      smallAmebaOver_2: 4806338624554146786
+      smallAmebaOver_3: 1493699685183041641
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

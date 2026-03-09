@@ -14,25 +14,36 @@ public class CoralLogic : MonoBehaviour
     [SerializeField] private float coralPauseAtEnds = 0.08f;
     public float delayStartMovingCoralTime = 0f;
 
+    [Header("Physics Stabilization")]
+    [SerializeField] private bool forceKinematicBody = true;
+    [SerializeField] private bool lockPositionDuringStartDelay = true;
+
     private Rigidbody2D rb;
     private EnemyHealth health;
     
+    private float coralBaseX;
     private float coralBaseY;
     private bool coralMovingUp = true;
     private float coralVelocityY;
     private float coralPauseTimer;
     private float coralStartDelayTimer;
     private Collider2D[] cachedEnemyColliders;
+    private bool isPrimaryController = true;
 
     private void Awake()
     {
-        rb = GetComponent<Rigidbody2D>();
-        health = GetComponent<EnemyHealth>();
-        if (health == null)
+        isPrimaryController = EnsureSingleCoralController();
+        if (!isPrimaryController)
         {
-            health = gameObject.AddComponent<EnemyHealth>();
+            enabled = false;
+            return;
         }
-        
+
+        rb = GetComponent<Rigidbody2D>();
+        ResolvePrimaryHealthComponent();
+
+        ConfigureRigidbody();
+        coralBaseX = rb.position.x;
         coralBaseY = rb.position.y;
         coralStartDelayTimer = Mathf.Max(0f, delayStartMovingCoralTime);
         
@@ -41,6 +52,8 @@ public class CoralLogic : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (!isPrimaryController) return;
+
         // Stop moving if the coral is dead
         if (health.isDead) return;
 
@@ -52,6 +65,12 @@ public class CoralLogic : MonoBehaviour
         if (coralStartDelayTimer > 0f)
         {
             coralStartDelayTimer = Mathf.Max(0f, coralStartDelayTimer - Time.fixedDeltaTime);
+            if (lockPositionDuringStartDelay)
+            {
+                rb.linearVelocity = Vector2.zero;
+                rb.angularVelocity = 0f;
+                rb.MovePosition(new Vector2(coralBaseX, coralBaseY));
+            }
             return;
         }
 
@@ -74,14 +93,63 @@ public class CoralLogic : MonoBehaviour
             Time.fixedDeltaTime
         );
         
-        rb.MovePosition(new Vector2(rb.position.x, nextY));
+        rb.MovePosition(new Vector2(coralBaseX, nextY));
 
         if (Mathf.Abs(nextY - targetY) <= Mathf.Max(0.001f, coralArrivalDistance))
         {
-            rb.MovePosition(new Vector2(rb.position.x, targetY));
+            rb.MovePosition(new Vector2(coralBaseX, targetY));
             coralVelocityY = 0f;
             coralMovingUp = !coralMovingUp;
             coralPauseTimer = Mathf.Max(0f, coralPauseAtEnds);
+        }
+    }
+
+    private void ConfigureRigidbody()
+    {
+        if (rb == null) return;
+
+        rb.gravityScale = 0f;
+        rb.linearVelocity = Vector2.zero;
+        rb.angularVelocity = 0f;
+
+        if (forceKinematicBody)
+        {
+            rb.bodyType = RigidbodyType2D.Kinematic;
+        }
+    }
+
+    private bool EnsureSingleCoralController()
+    {
+        CoralLogic[] controllers = GetComponents<CoralLogic>();
+        if (controllers == null || controllers.Length <= 1) return true;
+
+        CoralLogic primary = controllers[0];
+        if (primary != this) return false;
+
+        for (int i = 1; i < controllers.Length; i++)
+        {
+            if (controllers[i] == null) continue;
+            controllers[i].enabled = false;
+        }
+
+        Debug.LogWarning($"CoralLogic: {name} tenia componentes duplicados. Se desactivaron los extras.", this);
+        return true;
+    }
+
+    private void ResolvePrimaryHealthComponent()
+    {
+        EnemyHealth[] allHealth = GetComponents<EnemyHealth>();
+        if (allHealth == null || allHealth.Length == 0)
+        {
+            health = gameObject.AddComponent<EnemyHealth>();
+            return;
+        }
+
+        health = allHealth[0];
+        for (int i = 1; i < allHealth.Length; i++)
+        {
+            if (allHealth[i] == null) continue;
+            allHealth[i].enabled = false;
         }
     }
 

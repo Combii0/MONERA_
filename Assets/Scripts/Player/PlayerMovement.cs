@@ -69,6 +69,7 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Disparo")]
     [SerializeField] private bool enableShooting = true;
+    [SerializeField] private GameObject projectilePrefab;
     [SerializeField] private Sprite projectileSprite;
     [SerializeField, HideInInspector] private float projectileSpeed = 14f;
     [SerializeField, HideInInspector] private int projectileDamage = 1;
@@ -646,21 +647,40 @@ public class PlayerMovement : MonoBehaviour
         Vector3 spawnOffset = (Vector3)(direction * shootSpawnOffset.x) + new Vector3(0f, shootSpawnOffset.y, 0f);
         Vector3 spawnPosition = transform.position + spawnOffset;
 
-        GameObject projectileObj = new GameObject("PlayerProjectile");
-        projectileObj.transform.position = spawnPosition;
+        bool usingPrefab = projectilePrefab != null;
+        GameObject projectileObj = usingPrefab
+            ? Instantiate(projectilePrefab, spawnPosition, Quaternion.identity)
+            : new GameObject("PlayerProjectile");
+        if (!usingPrefab)
+        {
+            projectileObj.transform.position = spawnPosition;
+            projectileObj.transform.localScale = Vector3.one * Mathf.Max(0.05f, projectileScale);
+        }
 
-        SpriteRenderer projectileRenderer = projectileObj.AddComponent<SpriteRenderer>();
-        projectileRenderer.sprite = projectileSprite != null ? projectileSprite : spriteRenderer.sprite;
-        projectileRenderer.color = projectileColor;
-        projectileObj.transform.localScale = Vector3.one * Mathf.Max(0.05f, projectileScale);
+        SpriteRenderer projectileRenderer = projectileObj.GetComponent<SpriteRenderer>();
+        if (projectileRenderer == null) projectileRenderer = projectileObj.AddComponent<SpriteRenderer>();
+
+        if (!usingPrefab || projectileSprite != null)
+        {
+            projectileRenderer.sprite = projectileSprite != null ? projectileSprite : spriteRenderer.sprite;
+        }
+        if (!usingPrefab)
+        {
+            projectileRenderer.color = projectileColor;
+        }
         projectileRenderer.sortingLayerID = spriteRenderer.sortingLayerID;
         projectileRenderer.sortingOrder = spriteRenderer.sortingOrder + projectileSortingOrderOffset;
 
-        CircleCollider2D projectileCollider = projectileObj.AddComponent<CircleCollider2D>();
+        CircleCollider2D projectileCollider = projectileObj.GetComponent<CircleCollider2D>();
+        if (projectileCollider == null) projectileCollider = projectileObj.AddComponent<CircleCollider2D>();
         projectileCollider.isTrigger = true;
-        projectileCollider.radius = Mathf.Max(0.01f, projectileColliderRadius);
+        if (!usingPrefab)
+        {
+            projectileCollider.radius = Mathf.Max(0.01f, projectileColliderRadius);
+        }
 
-        Rigidbody2D projectileRb = projectileObj.AddComponent<Rigidbody2D>();
+        Rigidbody2D projectileRb = projectileObj.GetComponent<Rigidbody2D>();
+        if (projectileRb == null) projectileRb = projectileObj.AddComponent<Rigidbody2D>();
         projectileRb.bodyType = RigidbodyType2D.Kinematic;
         projectileRb.gravityScale = 0f;
         projectileRb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
@@ -680,7 +700,8 @@ public class PlayerMovement : MonoBehaviour
             }
         }
 
-        PlayerProjectile projectile = projectileObj.AddComponent<PlayerProjectile>();
+        PlayerProjectile projectile = projectileObj.GetComponent<PlayerProjectile>();
+        if (projectile == null) projectile = projectileObj.AddComponent<PlayerProjectile>();
         projectile.Initialize(Mathf.Max(1, projectileDamage), Mathf.Max(0.05f, projectileLifetime));
     }
 
