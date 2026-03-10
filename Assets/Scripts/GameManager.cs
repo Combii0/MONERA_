@@ -6,6 +6,10 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    private static readonly Color HpDefaultColor = Color.white;
+    private static readonly Color HpDamageFlashColor = Color.red;
+    private static readonly Color HpHealFlashColor = new Color(0.2f, 1f, 0.35f, 1f);
+
     [Header("Vida")]
     [SerializeField] private int maxLives = 3;
     [SerializeField] private bool allowLivesAboveMax = true;
@@ -13,19 +17,25 @@ public class GameManager : MonoBehaviour
     [SerializeField] private string hpPrefix = "HPS: ";
     
     [Header("Colores Vida")]
-    [SerializeField] private Color hpColorHigh = new Color(0.2f, 1f, 0.35f, 1f); // 3 o más (Verde)
     [SerializeField] private Color hpColorMedium = new Color(1f, 0.65f, 0f, 1f); // 2 (Naranja/Amarillo)
     [SerializeField] private Color hpColorLow = Color.red; // 1 (Rojo)
-    [SerializeField] private Color hpDamageColor = Color.white; // Flash de daño
-    [SerializeField] private Color hpHealColor = Color.cyan; // Flash de curación
     
     [Header("Tiempos Vida")]
     [SerializeField] private float hpFlashDuration = 0.5f;
     [SerializeField] private float hpHealFlashDuration = 0.5f;
+    [SerializeField] private float hpColorTransitionDuration = 0.18f;
     [SerializeField] private float hitCooldown = 0.6f;
     [SerializeField] private int hpScaleStartLives = 3;
     [SerializeField] private float hpScalePerExtraLife = 0.08f;
     [SerializeField] private float hpScaleMaxMultiplier = 1.45f;
+    [SerializeField] private bool keepHpScaleConstant = true;
+
+    [Header("Layout HP (HUD)")]
+    [SerializeField] private bool autoFixHpLayout = true;
+    [SerializeField] private Vector2 hpScreenOffset = new Vector2(24f, -24f);
+    [SerializeField] private Vector2 hpScreenSize = new Vector2(240f, 72f);
+    [SerializeField] private TextAlignmentOptions hpTextAlignment = TextAlignmentOptions.TopLeft;
+    [SerializeField] private Vector4 hpTextMargins = Vector4.zero;
 
     [Header("Referencias")]
     [SerializeField] private PlayerMovement player;
@@ -60,8 +70,10 @@ public class GameManager : MonoBehaviour
     private int currentLives;
     private float nextAllowedHitTime;
     private Coroutine hpFlashRoutine;
+    private Coroutine hpColorRoutine;
     private Vector3 hpBaseScale = Vector3.one;
     private bool hasHpBaseScale;
+    private bool hpLayoutConfigured;
     private Color currentBaseHpColor;
     
     private bool deathSequenceStarted;
@@ -128,7 +140,7 @@ public class GameManager : MonoBehaviour
         currentLives = Mathf.Max(0, currentLives - 1);
         
         RefreshHpLabel();
-        FlashHpText(hpDamageColor, hpFlashDuration);
+        FlashHpText(HpDamageFlashColor, hpFlashDuration);
 
         Vector2 awayDirection = (Vector2)player.transform.position - damageSourcePosition;
         player.ApplyDamageFeedback(awayDirection, knockbackForce, knockbackUpward, flashDuration);
@@ -150,7 +162,7 @@ public class GameManager : MonoBehaviour
         
         currentLives = nextLives;
         RefreshHpLabel();
-        FlashHpText(hpHealColor, hpHealFlashDuration);
+        FlashHpText(HpHealFlashColor, hpHealFlashDuration);
         return true;
     }
 
@@ -158,11 +170,42 @@ public class GameManager : MonoBehaviour
     {
         if (player == null) player = FindFirstObjectByType<PlayerMovement>();
 
-        if (hpText != null && !hasHpBaseScale)
+        if (hpText == null) return;
+
+        if (!hpLayoutConfigured)
+        {
+            ConfigureHpLayout();
+            hpLayoutConfigured = true;
+        }
+
+        if (!hasHpBaseScale)
         {
             hpBaseScale = hpText.rectTransform.localScale;
             hasHpBaseScale = true;
         }
+    }
+
+    private void ConfigureHpLayout()
+    {
+        RectTransform hpRect = hpText.rectTransform;
+
+        if (autoFixHpLayout)
+        {
+            hpRect.anchorMin = new Vector2(0f, 1f);
+            hpRect.anchorMax = new Vector2(0f, 1f);
+            hpRect.pivot = new Vector2(0f, 1f);
+            hpRect.anchoredPosition = hpScreenOffset;
+
+            if (hpScreenSize.x > 0f && hpScreenSize.y > 0f)
+            {
+                hpRect.sizeDelta = hpScreenSize;
+            }
+        }
+
+        hpText.margin = hpTextMargins;
+        hpText.alignment = hpTextAlignment;
+        hpText.textWrappingMode = TextWrappingModes.NoWrap;
+        hpText.overflowMode = TextOverflowModes.Overflow;
     }
 
     private void RefreshHpLabel()
@@ -178,14 +221,11 @@ public class GameManager : MonoBehaviour
         hpText.enabled = true;
         hpText.text = hpPrefix + currentLives;
 
-        if (currentLives >= 3) currentBaseHpColor = hpColorHigh;
+        if (currentLives >= 3) currentBaseHpColor = HpDefaultColor;
         else if (currentLives == 2) currentBaseHpColor = hpColorMedium;
         else currentBaseHpColor = hpColorLow;
 
-        if (hpFlashRoutine == null)
-        {
-            hpText.color = currentBaseHpColor;
-        }
+        if (hpFlashRoutine == null) TransitionToHpColor(currentBaseHpColor, hpColorTransitionDuration);
 
         UpdateHpScale();
     }
@@ -197,6 +237,12 @@ public class GameManager : MonoBehaviour
         {
             hpBaseScale = hpText.rectTransform.localScale;
             hasHpBaseScale = true;
+        }
+
+        if (keepHpScaleConstant)
+        {
+            hpText.rectTransform.localScale = hpBaseScale;
+            return;
         }
 
         int extraLives = Mathf.Max(0, currentLives - hpScaleStartLives);
@@ -214,10 +260,50 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator HpFlashRoutine(Color flashColor, float duration)
     {
-        hpText.color = flashColor;
+        if (hpColorRoutine != null)
+        {
+            StopCoroutine(hpColorRoutine);
+            hpColorRoutine = null;
+        }
+
+        yield return LerpHpColor(hpText.color, flashColor, hpColorTransitionDuration);
         yield return new WaitForSeconds(duration);
-        hpText.color = currentBaseHpColor;
+        yield return LerpHpColor(hpText.color, currentBaseHpColor, hpColorTransitionDuration);
         hpFlashRoutine = null;
+    }
+
+    private void TransitionToHpColor(Color targetColor, float duration)
+    {
+        if (hpText == null || !hpText.enabled) return;
+
+        if (hpColorRoutine != null) StopCoroutine(hpColorRoutine);
+        hpColorRoutine = StartCoroutine(HpColorTransitionRoutine(targetColor, duration));
+    }
+
+    private IEnumerator HpColorTransitionRoutine(Color targetColor, float duration)
+    {
+        yield return LerpHpColor(hpText.color, targetColor, duration);
+        hpColorRoutine = null;
+    }
+
+    private IEnumerator LerpHpColor(Color startColor, Color targetColor, float duration)
+    {
+        if (duration <= 0f)
+        {
+            hpText.color = targetColor;
+            yield break;
+        }
+
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            hpText.color = Color.Lerp(startColor, targetColor, t);
+            yield return null;
+        }
+
+        hpText.color = targetColor;
     }
 
     private void StopGameplaySystems(bool pauseTime)
@@ -231,6 +317,7 @@ public class GameManager : MonoBehaviour
         gameplayStopped = true;
 
         if (hpFlashRoutine != null) StopCoroutine(hpFlashRoutine);
+        if (hpColorRoutine != null) StopCoroutine(hpColorRoutine);
         if (hpText != null) hpText.color = currentBaseHpColor;
 
         if (player != null)

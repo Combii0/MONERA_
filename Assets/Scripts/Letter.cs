@@ -145,7 +145,7 @@ public class Letter : MonoBehaviour
         if (LetterManager.Instance != null)
         {
             HidePromptImmediate();
-            LetterManager.Instance.ReadLetter(screenMessage, player, letterScreenFontSize);
+            LetterManager.Instance.ReadLetter(screenMessage, player, letterScreenFontSize, transform);
         }
         else
         {
