@@ -29,7 +29,6 @@ public class Letter : MonoBehaviour
     [FormerlySerializedAs("promptFontSize")]
     [SerializeField] public float interactPromptFontSize = 1.4f;
     [SerializeField] public float interactPromptScale = 2.4f;
-    [SerializeField] public float letterScreenFontSize = 38f;
 
     [Header("Animacion Prompt")]
     [SerializeField] private float promptShowDuration = 0.12f;
@@ -145,7 +144,7 @@ public class Letter : MonoBehaviour
         if (LetterManager.Instance != null)
         {
             HidePromptImmediate();
-            LetterManager.Instance.ReadLetter(screenMessage, player, letterScreenFontSize, transform);
+            LetterManager.Instance.ReadLetter(screenMessage, player); // ACTUALIZADO PARA COINCIDIR CON LA NUEVA FIRMA
         }
         else
         {
@@ -313,8 +312,6 @@ public class Letter : MonoBehaviour
         interactPromptFontSize = Mathf.Clamp(interactPromptFontSize, 0.2f, 20f);
         if (interactPromptScale <= 0f) interactPromptScale = 2.4f;
         interactPromptScale = Mathf.Clamp(interactPromptScale, 0.2f, 12f);
-        if (letterScreenFontSize <= 0f) letterScreenFontSize = 38f;
-        letterScreenFontSize = Mathf.Clamp(letterScreenFontSize, 6f, 220f);
         if (promptShowDuration <= 0f) promptShowDuration = DefaultShowDuration;
         if (promptHideDuration <= 0f) promptHideDuration = DefaultHideDuration;
         promptPopScale = Mathf.Max(1f, promptPopScale);

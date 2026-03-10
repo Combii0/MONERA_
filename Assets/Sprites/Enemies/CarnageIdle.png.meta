@@ -1,160 +1,43 @@
 fileFormatVersion: 2
-guid: 4103e2e23d632436abcca3f2829d291d
+guid: b74e96936b5af49178a8007352214895
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 6038635665120632183
-    second: lavaaaaa_0
+      213: -7277210673917730585
+    second: CarnageIdle_0
   - first:
-      213: -8727898964123158285
-    second: lavaaaaa_1
+      213: 2312833161394227885
+    second: CarnageIdle_1
   - first:
-      213: 1811039563543858988
-    second: lavaaaaa_2
+      213: -1134822371535968001
+    second: CarnageIdle_2
   - first:
-      213: 399399337904909675
-    second: lavaaaaa_3
+      213: 6028903164109376239
+    second: CarnageIdle_3
   - first:
-      213: 8058983578994072808
-    second: lavaaaaa_4
+      213: -4493468065929042297
+    second: CarnageIdle_4
   - first:
-      213: -8495203236836761586
-    second: lavaaaaa_5
+      213: -2968413035411105431
+    second: CarnageIdle_5
   - first:
-      213: 4006453154195457409
-    second: lavaaaaa_6
+      213: -274077606127944993
+    second: CarnageIdle_6
   - first:
-      213: -1313905734205591927
-    second: lavaaaaa_7
+      213: -6307432972522264764
+    second: CarnageIdle_7
   - first:
-      213: 4390785097466689835
-    second: lavaaaaa_8
+      213: 2258914125768813797
+    second: CarnageIdle_8
   - first:
-      213: 5411990823031155337
-    second: lavaaaaa_9
+      213: -7861451620313367624
+    second: CarnageIdle_9
   - first:
-      213: -7036233264648334014
-    second: lavaaaaa_10
+      213: -8028647110747346231
+    second: CarnageIdle_10
   - first:
-      213: 4976218442187752304
-    second: lavaaaaa_11
-  - first:
-      213: 4104464636389995582
-    second: lavaaaaa_12
-  - first:
-      213: 8895396341698962885
-    second: lavaaaaa_13
-  - first:
-      213: -4029546138036878853
-    second: lavaaaaa_14
-  - first:
-      213: -4372216670183992586
-    second: lavaaaaa_15
-  - first:
-      213: -2282734501555269258
-    second: lavaaaaa_16
-  - first:
-      213: 5351031214673318102
-    second: lavaaaaa_17
-  - first:
-      213: 7339007355126570333
-    second: lavaaaaa_18
-  - first:
-      213: 1853934622804738641
-    second: lavaaaaa_19
-  - first:
-      213: -6497222288957907839
-    second: lavaaaaa_20
-  - first:
-      213: -633898608213928584
-    second: lavaaaaa_21
-  - first:
-      213: -6371664532553762381
-    second: lavaaaaa_22
-  - first:
-      213: 3410946727264352803
-    second: lavaaaaa_23
-  - first:
-      213: 3949014814771428224
-    second: lavaaaaa_24
-  - first:
-      213: 4580303525517957005
-    second: lavaaaaa_25
-  - first:
-      213: -3703974705237586447
-    second: lavaaaaa_26
-  - first:
-      213: -2308266182469936454
-    second: lavaaaaa_27
-  - first:
-      213: -1456207043264561993
-    second: lavaaaaa_28
-  - first:
-      213: 7821266140080262125
-    second: lavaaaaa_29
-  - first:
-      213: -8863347130842002993
-    second: lavaaaaa_30
-  - first:
-      213: 410158008841047714
-    second: lavaaaaa_31
-  - first:
-      213: 7990175539926565751
-    second: lavaaaaa_32
-  - first:
-      213: -9081282528243478363
-    second: lavaaaaa_33
-  - first:
-      213: -2062395086673187680
-    second: lavaaaaa_34
-  - first:
-      213: 6910170979836510212
-    second: lavaaaaa_35
-  - first:
-      213: -2472952828719885422
-    second: lavaaaaa_36
-  - first:
-      213: -442763674779303137
-    second: lavaaaaa_37
-  - first:
-      213: 8122389220973531618
-    second: lavaaaaa_38
-  - first:
-      213: -7965032058855032300
-    second: lavaaaaa_39
-  - first:
-      213: -7318167498860645426
-    second: lavaaaaa_40
-  - first:
-      213: -5649969901027610093
-    second: lavaaaaa_41
-  - first:
-      213: 3004818718919273491
-    second: lavaaaaa_42
-  - first:
-      213: -7122609455830501407
-    second: lavaaaaa_43
-  - first:
-      213: -6992631740049538383
-    second: lavaaaaa_44
-  - first:
-      213: 5617685929496255726
-    second: lavaaaaa_45
-  - first:
-      213: -8577876025698100765
-    second: lavaaaaa_46
-  - first:
-      213: -2834728289697873600
-    second: lavaaaaa_47
-  - first:
-      213: 849767832281772419
-    second: lavaaaaa_48
-  - first:
-      213: -4631493670857039086
-    second: lavaaaaa_49
-  - first:
-      213: 3659943603668597542
-    second: lavaaaaa_50
+      213: -2525833192576952731
+    second: CarnageIdle_11
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -201,7 +84,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 40
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -251,7 +134,7 @@ TextureImporter:
     maxTextureSize: 2048
     resizeAlgorithm: 0
     textureFormat: -1
-    textureCompression: 0
+    textureCompression: 1
     compressionQuality: 50
     crunchedCompression: 0
     allowsAlphaSplitting: 0
@@ -263,13 +146,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: lavaaaaa_0
+      name: CarnageIdle_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 320
-        height: 180
+        width: 40
+        height: 40
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -278,20 +161,174 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 77d1583b42b8dc350800000000000000
-      internalID: 6038635665120632183
+      spriteID: 7e0e379c277220b90800000000000000
+      internalID: -7277210673917730585
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: lavaaaaa_1
+      name: CarnageIdle_1
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 0
+        width: 40
+        height: 40
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: daa85a1a185d81020800000000000000
+      internalID: 2312833161394227885
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CarnageIdle_2
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 0
+        width: 40
+        height: 40
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ff8ae6dc01d4040f0800000000000000
+      internalID: -1134822371535968001
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CarnageIdle_3
+      rect:
+        serializedVersion: 2
+        x: 120
+        y: 0
+        width: 40
+        height: 40
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: feac7f93c77faa350800000000000000
+      internalID: 6028903164109376239
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CarnageIdle_4
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 0
+        width: 40
+        height: 40
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 786ecb8f99ef3a1c0800000000000000
+      internalID: -4493468065929042297
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CarnageIdle_5
+      rect:
+        serializedVersion: 2
+        x: 200
+        y: 0
+        width: 40
+        height: 40
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9699ea552141ec6d0800000000000000
+      internalID: -2968413035411105431
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CarnageIdle_6
+      rect:
+        serializedVersion: 2
+        x: 240
+        y: 0
+        width: 40
+        height: 40
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fdabadd8ed7423cf0800000000000000
+      internalID: -274077606127944993
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CarnageIdle_7
+      rect:
+        serializedVersion: 2
+        x: 280
+        y: 0
+        width: 40
+        height: 40
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4476934312f7778a0800000000000000
+      internalID: -6307432972522264764
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: CarnageIdle_8
       rect:
         serializedVersion: 2
         x: 320
         y: 0
-        width: 320
-        height: 180
+        width: 40
+        height: 40
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -300,20 +337,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 3f870ff622640e680800000000000000
-      internalID: -8727898964123158285
+      spriteID: 5ecef8cdd66495f10800000000000000
+      internalID: 2258914125768813797
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: lavaaaaa_2
+      name: CarnageIdle_9
       rect:
         serializedVersion: 2
-        x: 640
+        x: 360
         y: 0
-        width: 320
-        height: 180
+        width: 40
+        height: 40
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -322,20 +359,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: c2fc53343ea122910800000000000000
-      internalID: 1811039563543858988
+      spriteID: 8bb7d40376386e290800000000000000
+      internalID: -7861451620313367624
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: lavaaaaa_3
+      name: CarnageIdle_10
       rect:
         serializedVersion: 2
-        x: 960
+        x: 400
         y: 0
-        width: 320
-        height: 180
+        width: 40
+        height: 40
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -344,20 +381,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: b6d295be493fa8500800000000000000
-      internalID: 399399337904909675
+      spriteID: 9ca20f88df3849090800000000000000
+      internalID: -8028647110747346231
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: lavaaaaa_4
+      name: CarnageIdle_11
       rect:
         serializedVersion: 2
-        x: 1280
+        x: 440
         y: 0
-        width: 320
-        height: 180
+        width: 40
+        height: 40
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -366,74 +403,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 8ecd5a4edd247df60800000000000000
-      internalID: 8058983578994072808
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: lavaaaaa_5
-      rect:
-        serializedVersion: 2
-        x: 1600
-        y: 0
-        width: 320
-        height: 180
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: e00a8956aa9fa1a80800000000000000
-      internalID: -8495203236836761586
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: lavaaaaa_6
-      rect:
-        serializedVersion: 2
-        x: 1920
-        y: 0
-        width: 320
-        height: 180
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 1854019aae7c99730800000000000000
-      internalID: 4006453154195457409
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: lavaaaaa_7
-      rect:
-        serializedVersion: 2
-        x: 2240
-        y: 0
-        width: 320
-        height: 180
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: 98ea35432b114cde0800000000000000
-      internalID: -1313905734205591927
+      spriteID: 5665f82081072fcd0800000000000000
+      internalID: -2525833192576952731
       vertices: []
       indices: 
       edges: []
@@ -442,7 +413,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 0d427a8600f60474cbddeef8f76df7ca
+    spriteID: 292afbd5991a04ffaad2eefc042f1cca
     internalID: 0
     vertices: []
     indices: 
@@ -452,16 +423,20 @@ TextureImporter:
     spriteCustomMetadata:
       entries:
       - key: SpriteEditor.SliceSettings
-        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":320.0,"y":180.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":40.0,"y":40.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      lavaaaaa_0: 6038635665120632183
-      lavaaaaa_1: -8727898964123158285
-      lavaaaaa_2: 1811039563543858988
-      lavaaaaa_3: 399399337904909675
-      lavaaaaa_4: 8058983578994072808
-      lavaaaaa_5: -8495203236836761586
-      lavaaaaa_6: 4006453154195457409
-      lavaaaaa_7: -1313905734205591927
+      CarnageIdle_0: -7277210673917730585
+      CarnageIdle_1: 2312833161394227885
+      CarnageIdle_10: -8028647110747346231
+      CarnageIdle_11: -2525833192576952731
+      CarnageIdle_2: -1134822371535968001
+      CarnageIdle_3: 6028903164109376239
+      CarnageIdle_4: -4493468065929042297
+      CarnageIdle_5: -2968413035411105431
+      CarnageIdle_6: -274077606127944993
+      CarnageIdle_7: -6307432972522264764
+      CarnageIdle_8: 2258914125768813797
+      CarnageIdle_9: -7861451620313367624
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

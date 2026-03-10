@@ -330,10 +330,15 @@ MonoBehaviour:
   activationRadius: 6
   invulnerableWhileIdle: 1
   cianBacteriaCircle: {fileID: 4832535490735461033}
-  cianCircleFadeDuration: 0.35
+  preShootWarningDuration: 0.45
+  preShootBlinkSpeed: 10
+  preShootWarningColor: {r: 1, g: 0.15, b: 0.15, a: 1}
   bulletPrefab: {fileID: 6147736565094384032, guid: 7ceb2aec61513a24dbfb2adadbfa022a, type: 3}
   bulletSpeed: 6
   burstInterval: 1.5
   bulletsPerBurst: 4
   timeBetweenShots: 0.2
   shootSpawnOffset: 0.5
+  enableFloating: 1
+  floatingAmplitude: 0.12
+  floatingSpeed: 1.8
