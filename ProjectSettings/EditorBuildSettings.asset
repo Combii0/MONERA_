@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/Scenes/The Cave.unity
     guid: 3fa529faf660d4d49bec356996c738aa
   - enabled: 1
+    path: Assets/Scenes/THE PROTECTOR.unity
+    guid: b80088cbc9fd8494684c28217664a7a0
+  - enabled: 1
     path: Assets/Scenes/The Tunnel.unity
     guid: 296f5d904c242ab4c9b25772a60fc084
   m_configObjects:

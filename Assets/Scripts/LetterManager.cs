@@ -31,6 +31,8 @@ public class LetterManager : MonoBehaviour
     private Coroutine typeRoutine;
     private float nextSfxTime;
     private PlayerMovement frozenPlayer;
+    private AudioClip runtimeTypeSfxOverride;
+    private float runtimeTypeSfxVolumeOverride = -1f;
 
     private void Awake()
     {
@@ -57,6 +59,26 @@ public class LetterManager : MonoBehaviour
 
         if (IsReading) return; 
 
+        runtimeTypeSfxOverride = null;
+        runtimeTypeSfxVolumeOverride = -1f;
+        IsReading = true; 
+
+        if (typeRoutine != null) StopCoroutine(typeRoutine);
+        typeRoutine = StartCoroutine(TypeRoutine(message, player));
+    }
+
+    public void ReadLetter(string message, PlayerMovement player, AudioClip customTypeSfx, float customTypeSfxVolume)
+    {
+        if (textSlot == null)
+        {
+            Debug.LogError("LetterManager: ¡Falta asignar el SignText en el Inspector!");
+            return;
+        }
+        if (string.IsNullOrEmpty(message)) return;
+        if (IsReading) return;
+
+        runtimeTypeSfxOverride = customTypeSfx;
+        runtimeTypeSfxVolumeOverride = Mathf.Clamp01(customTypeSfxVolume);
         IsReading = true; 
 
         if (typeRoutine != null) StopCoroutine(typeRoutine);
@@ -133,6 +155,8 @@ public class LetterManager : MonoBehaviour
         Time.timeScale = 1f;
         IsReading = false; 
         typeRoutine = null;
+        runtimeTypeSfxOverride = null;
+        runtimeTypeSfxVolumeOverride = -1f;
     }
 
     private void OnDisable()
@@ -177,14 +201,25 @@ public class LetterManager : MonoBehaviour
 
     private void PlayTypeSfx()
     {
-        if (typeSfx == null) return;
+        AudioClip activeTypeSfx = runtimeTypeSfxOverride != null ? runtimeTypeSfxOverride : typeSfx;
+        if (activeTypeSfx == null) return;
         if (Time.unscaledTime < nextSfxTime) return;
         
         nextSfxTime = Time.unscaledTime + 0.02f;
-        
+
+        float volume = runtimeTypeSfxOverride != null
+            ? Mathf.Clamp01(runtimeTypeSfxVolumeOverride)
+            : Mathf.Clamp01(typeSfxVolume);
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.PlayUiSfx(activeTypeSfx, volume);
+            return;
+        }
+
         AudioSource src = GetComponent<AudioSource>();
         if (src == null) src = gameObject.AddComponent<AudioSource>();
-        src.PlayOneShot(typeSfx, typeSfxVolume);
+        src.PlayOneShot(activeTypeSfx, volume);
     }
 
     private void CleanupStateIfInterrupted()
@@ -197,6 +232,8 @@ public class LetterManager : MonoBehaviour
 
         Time.timeScale = 1f;
         IsReading = false;
+        runtimeTypeSfxOverride = null;
+        runtimeTypeSfxVolumeOverride = -1f;
     }
 
 #if UNITY_EDITOR

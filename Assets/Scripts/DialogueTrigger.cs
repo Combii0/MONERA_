@@ -28,6 +28,10 @@ public class DialogueTrigger : MonoBehaviour
     [SerializeField] private float promptIdleFloatAmplitude = 0.03f;
     [SerializeField] private float promptIdleFloatSpeed = 4.2f;
 
+    [Header("Audio NPC")]
+    [SerializeField] private AudioClip npcTypeSfx;
+    [SerializeField, Range(0f, 1f)] private float npcTypeSfxVolume = 0.65f;
+
     private PlayerMovement playerInRange;
     private GameObject promptRoot;
     private TextMeshPro promptText;
@@ -70,7 +74,15 @@ public class DialogueTrigger : MonoBehaviour
                     if (DialogueManager.Instance != null)
                     {
                         // Pass the array of lines to the Manager
-                        DialogueManager.Instance.StartDialogue(dialogueLines, playerInRange);
+                        DialogueManager.Instance.StartDialogue(
+                            dialogueLines,
+                            playerInRange,
+                            npcTypeSfx,
+                            npcTypeSfxVolume,
+                            -1,
+                            0f,
+                            false
+                        );
                     }
                     else
                     {

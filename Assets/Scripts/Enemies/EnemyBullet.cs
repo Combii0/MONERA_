@@ -6,17 +6,37 @@ public class EnemyBullet : MonoBehaviour
 {
     [SerializeField] private float lifetime = 4f;
     [SerializeField] private bool destroyOnWorldHit = true;
+    [SerializeField] private bool ignoreProtectorCollision = true;
+    [SerializeField] private bool forceRenderOnTop = true;
+    [SerializeField] private int projectileSortingOrder = 120;
+
+    private Collider2D bulletCollider;
+    private SpriteRenderer[] projectileRenderers;
+
+    private void Awake()
+    {
+        bulletCollider = GetComponent<Collider2D>();
+        projectileRenderers = GetComponentsInChildren<SpriteRenderer>(true);
+        ApplyRenderPriority();
+    }
 
     private void Start()
     {
         Destroy(gameObject, lifetime);
         
         // Ensure it's a trigger so it doesn't push the player physically
-        GetComponent<Collider2D>().isTrigger = true;
+        if (bulletCollider != null) bulletCollider.isTrigger = true;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        if (other == null) return;
+
+        if (ignoreProtectorCollision && other.GetComponentInParent<Protector>() != null)
+        {
+            return;
+        }
+
         // 1. Check if it hit the player
         if (MatchesTagSafe(other.gameObject, "Player") || other.GetComponentInParent<PlayerMovement>() != null)
         {
@@ -39,6 +59,20 @@ public class EnemyBullet : MonoBehaviour
             {
                 Destroy(gameObject);
             }
+        }
+    }
+
+    private void ApplyRenderPriority()
+    {
+        if (!forceRenderOnTop || projectileRenderers == null) return;
+
+        int desiredOrder = Mathf.Max(0, projectileSortingOrder);
+        for (int i = 0; i < projectileRenderers.Length; i++)
+        {
+            SpriteRenderer renderer = projectileRenderers[i];
+            if (renderer == null) continue;
+
+            renderer.sortingOrder = Mathf.Max(renderer.sortingOrder, desiredOrder);
         }
     }
 

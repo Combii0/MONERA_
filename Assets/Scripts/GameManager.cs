@@ -3,6 +3,7 @@ using TMPro;
 using System.Collections;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
 public class GameManager : MonoBehaviour
 {
@@ -59,6 +60,21 @@ public class GameManager : MonoBehaviour
     [SerializeField] private AudioClip fallDeathSfx;
     [SerializeField, Range(0f, 1f)] private float fallDeathSfxVolume = 1f;
 
+    [Header("Audio UI / NPC / Letters")]
+    [SerializeField] private AudioSource uiSfxAudioSource;
+    [SerializeField, Range(0f, 1f)] private float uiSfxGlobalVolume = 1f;
+
+    [Header("Audio Principal")]
+    [SerializeField, FormerlySerializedAs("caveMusicSource")] private AudioSource mainMusicSource;
+    [SerializeField] private AudioClip mainMusicClip;
+
+    [Header("Audio Background")]
+    [SerializeField, FormerlySerializedAs("protectorMusicSource")] private AudioSource backgroundMusicSource;
+    [SerializeField] private AudioClip backgroundMusicClip;
+    [SerializeField, Range(0f, 1f)] private float mainMusicMinNearProtector = 0f;
+    [SerializeField, Range(1f, 3f)] private float backgroundBoostNearProtector = 1.6f;
+    [SerializeField] private bool autoDetectMusicSources = true;
+
     [Header("Visor de Pantalla (Hierarchical UI)")]
     [SerializeField] private Canvas deathCanvas;
     [SerializeField] private Image deathFadeImage;
@@ -79,10 +95,25 @@ public class GameManager : MonoBehaviour
     private bool deathSequenceStarted;
     private bool gameplayStopped;
     private bool transitionStarted;
+    private bool musicPlaybackLocked;
+    private bool musicSourcesResolved;
+    private bool musicVolumesCached;
+    private float mainMusicBaseVolume = 1f;
+    private float backgroundMusicBaseVolume = 1f;
+    private static bool hasPendingSceneIntroFadeOverride;
+    private static float pendingSceneIntroFadeDuration = -1f;
+    private static int pendingSceneIntroFadeSteps = -1;
 
     public static GameManager Instance { get; private set; }
     public float InstantDeathY => instantDeathY;
     private float FallDeathTriggerY => instantDeathY - fallDeathExtraDepth;
+
+    public static void ConfigureNextSceneIntroFade(float durationSeconds, int stepCount)
+    {
+        hasPendingSceneIntroFadeOverride = true;
+        pendingSceneIntroFadeDuration = Mathf.Max(0.05f, durationSeconds);
+        pendingSceneIntroFadeSteps = Mathf.Max(2, stepCount);
+    }
 
     private void Awake()
     {
@@ -95,6 +126,7 @@ public class GameManager : MonoBehaviour
         Instance = this;
         currentLives = Mathf.Max(1, maxLives);
         ResolveReferences();
+        SetProtectorAudioBlend(0f);
         RefreshHpLabel();
     }
 
@@ -143,7 +175,11 @@ public class GameManager : MonoBehaviour
         FlashHpText(HpDamageFlashColor, hpFlashDuration);
 
         Vector2 awayDirection = (Vector2)player.transform.position - damageSourcePosition;
-        player.ApplyDamageFeedback(awayDirection, knockbackForce, knockbackUpward, flashDuration);
+        
+        if (player.TryGetComponent(out PlayerHealth playerHealth))
+        {
+            playerHealth.ApplyDamageFeedback(awayDirection, knockbackForce, knockbackUpward, flashDuration);
+        }
 
         if (currentLives == 0) StartDeathSequence();
 
@@ -323,7 +359,11 @@ public class GameManager : MonoBehaviour
         if (player != null)
         {
             if (player.TryGetComponent(out Rigidbody2D playerRb)) playerRb.linearVelocity = Vector2.zero;
+            
             player.enabled = false;
+            if (player.TryGetComponent(out PlayerShooting shooting)) shooting.enabled = false;
+            if (player.TryGetComponent(out PlayerAnimation anim)) anim.enabled = false;
+            if (player.TryGetComponent(out PlayerHealth health)) health.enabled = false;
         }
 
         if (pauseTime) Time.timeScale = 0f;
@@ -336,12 +376,18 @@ public class GameManager : MonoBehaviour
         if (deathSequenceStarted) return;
         deathSequenceStarted = true;
 
+        if (!musicPlaybackLocked)
+        {
+            LockAndStopMusicPlaybackImmediate();
+        }
+
         StopGameplaySystems(false);
         StartCoroutine(DeathScreenRoutine());
     }
 
     private void TriggerInstantDeathByFall()
     {
+        LockAndStopMusicPlaybackImmediate();
         PlayFallDeathSfx();
         currentLives = 0;
         RefreshHpLabel();
@@ -352,10 +398,50 @@ public class GameManager : MonoBehaviour
     {
         if (fallDeathSfx == null) return;
 
-        if (sfxAudioSource != null)
+        AudioSource source = ResolveFallSfxSource();
+        if (source == null) return;
+
+        source.PlayOneShot(fallDeathSfx, Mathf.Clamp01(fallDeathSfxVolume));
+    }
+
+    public void PlayUiSfx(AudioClip clip, float volume = 1f)
+    {
+        if (clip == null) return;
+
+        AudioSource source = ResolveUiSfxSource();
+        if (source == null) return;
+
+        float finalVolume = Mathf.Clamp01(volume) * Mathf.Clamp01(uiSfxGlobalVolume);
+        source.PlayOneShot(clip, finalVolume);
+    }
+
+    public void SetProtectorAudioBlend(float blend01)
+    {
+        if (musicPlaybackLocked || deathSequenceStarted) return;
+
+        float t = Mathf.Clamp01(blend01);
+        ResolveMusicSourcesIfNeeded();
+        if (!musicVolumesCached) CacheMusicBaseVolumes();
+
+        if (mainMusicSource != null)
         {
-            sfxAudioSource.PlayOneShot(fallDeathSfx, Mathf.Clamp01(fallDeathSfxVolume));
+            float mainFactor = Mathf.Lerp(1f, Mathf.Clamp01(mainMusicMinNearProtector), t);
+            mainMusicSource.volume = Mathf.Clamp01(mainMusicBaseVolume * mainFactor);
+            EnsureMusicPlayback(mainMusicSource, mainMusicClip);
         }
+
+        if (backgroundMusicSource != null)
+        {
+            float boostMultiplier = Mathf.Max(1f, backgroundBoostNearProtector);
+            float targetVolume = backgroundMusicBaseVolume * Mathf.Lerp(1f, boostMultiplier, t);
+            backgroundMusicSource.volume = Mathf.Clamp01(targetVolume);
+            EnsureMusicPlayback(backgroundMusicSource, backgroundMusicClip);
+        }
+    }
+
+    public void ResetProtectorAudioBlend()
+    {
+        SetProtectorAudioBlend(0f);
     }
 
     private IEnumerator FadeInRoutine()
@@ -365,12 +451,23 @@ public class GameManager : MonoBehaviour
         
         transitionFadeImage.gameObject.SetActive(true);
         Color targetColor = deathBackgroundColor;
+
+        float introDuration = Mathf.Max(0.05f, deathFadeDuration);
+        int introSteps = Mathf.Max(2, pixelFadeSteps);
+        if (hasPendingSceneIntroFadeOverride)
+        {
+            introDuration = Mathf.Max(0.05f, pendingSceneIntroFadeDuration);
+            introSteps = Mathf.Max(2, pendingSceneIntroFadeSteps);
+            hasPendingSceneIntroFadeOverride = false;
+            pendingSceneIntroFadeDuration = -1f;
+            pendingSceneIntroFadeSteps = -1;
+        }
         
         float timer = 0f;
-        while (timer < deathFadeDuration)
+        while (timer < introDuration)
         {
             timer += Time.unscaledDeltaTime;
-            float alpha = 1f - PixelStep01(timer / deathFadeDuration);
+            float alpha = 1f - PixelStepWithCustomSteps(timer / introDuration, introSteps);
             transitionFadeImage.color = new Color(targetColor.r, targetColor.g, targetColor.b, alpha);
             yield return null;
         }
@@ -446,7 +543,7 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator DeathScreenRoutine()
     {
-        StartCoroutine(FadeActiveAudioSources(0f, musicFadeDuration));
+        LockAndStopMusicPlaybackImmediate();
         
         if (deathCanvas == null)
         {
@@ -511,6 +608,175 @@ public class GameManager : MonoBehaviour
     }
 
     private float PixelStep01(float raw) => Mathf.Floor(Mathf.Clamp01(raw) * pixelFadeSteps) / pixelFadeSteps;
+    private static float PixelStepWithCustomSteps(float raw, int steps)
+    {
+        int safeSteps = Mathf.Max(2, steps);
+        return Mathf.Floor(Mathf.Clamp01(raw) * safeSteps) / safeSteps;
+    }
+
+    private void LockAndStopMusicPlaybackImmediate()
+    {
+        musicPlaybackLocked = true;
+        ResolveMusicSourcesIfNeeded();
+
+        StopMusicSource(mainMusicSource);
+        StopMusicSource(backgroundMusicSource);
+    }
+
+    private static void StopMusicSource(AudioSource source)
+    {
+        if (source == null) return;
+        if (source.isPlaying) source.Stop();
+    }
+
+    private AudioSource ResolveFallSfxSource()
+    {
+        if (sfxAudioSource != null)
+        {
+            sfxAudioSource.playOnAwake = false;
+            sfxAudioSource.loop = false;
+            return sfxAudioSource;
+        }
+
+        sfxAudioSource = GetComponent<AudioSource>();
+        if (sfxAudioSource == null)
+        {
+            sfxAudioSource = gameObject.AddComponent<AudioSource>();
+        }
+
+        sfxAudioSource.playOnAwake = false;
+        sfxAudioSource.loop = false;
+        return sfxAudioSource;
+    }
+
+    private AudioSource ResolveUiSfxSource()
+    {
+        if (uiSfxAudioSource != null) return uiSfxAudioSource;
+        if (sfxAudioSource != null) return sfxAudioSource;
+
+        uiSfxAudioSource = GetComponent<AudioSource>();
+        if (uiSfxAudioSource == null)
+        {
+            uiSfxAudioSource = gameObject.AddComponent<AudioSource>();
+            uiSfxAudioSource.playOnAwake = false;
+            uiSfxAudioSource.loop = false;
+        }
+
+        return uiSfxAudioSource;
+    }
+
+    private void ResolveMusicSourcesIfNeeded()
+    {
+        if (musicSourcesResolved) return;
+        musicSourcesResolved = true;
+
+        if (mainMusicSource != null && mainMusicClip != null) mainMusicSource.clip = mainMusicClip;
+        if (backgroundMusicSource != null && backgroundMusicClip != null) backgroundMusicSource.clip = backgroundMusicClip;
+
+        if (!autoDetectMusicSources)
+        {
+            CacheMusicBaseVolumes();
+            return;
+        }
+
+        if (mainMusicSource == null || backgroundMusicSource == null)
+        {
+            AudioSource[] sources = FindObjectsByType<AudioSource>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            for (int i = 0; i < sources.Length; i++)
+            {
+                AudioSource source = sources[i];
+                if (source == null || source.clip == null) continue;
+
+                string clipName = source.clip.name.ToLowerInvariant();
+                if (mainMusicSource == null && (clipName.Contains("main") || clipName.Contains("principal") || clipName.Contains("cave")))
+                {
+                    mainMusicSource = source;
+                    continue;
+                }
+
+                if (backgroundMusicSource == null &&
+                    source != mainMusicSource &&
+                    (clipName.Contains("background") || clipName.Contains("ambience") || clipName.Contains("ambient") || clipName.Contains("protector") || clipName.Contains("drone")))
+                {
+                    backgroundMusicSource = source;
+                }
+            }
+        }
+
+        CacheMusicBaseVolumes();
+    }
+
+    private void CacheMusicBaseVolumes()
+    {
+        if (mainMusicSource != null) mainMusicBaseVolume = Mathf.Clamp01(mainMusicSource.volume);
+        if (backgroundMusicSource != null) backgroundMusicBaseVolume = Mathf.Clamp01(backgroundMusicSource.volume);
+        musicVolumesCached = true;
+    }
+
+    private void EnsureMusicPlayback(AudioSource source, AudioClip overrideClip)
+    {
+        if (source == null) return;
+
+        if (overrideClip != null && source.clip != overrideClip)
+        {
+            source.clip = overrideClip;
+        }
+
+        source.playOnAwake = false;
+        source.loop = true;
+
+        if (!source.isPlaying && source.clip != null)
+        {
+            source.Play();
+        }
+    }
+
+    private IEnumerator FadeConfiguredMusicSources(float targetMultiplier, float duration, bool stopWhenFinished)
+    {
+        ResolveMusicSourcesIfNeeded();
+
+        AudioSource[] musicSources = new AudioSource[2] { mainMusicSource, backgroundMusicSource };
+        float[] startVolumes = new float[musicSources.Length];
+        bool hasAnySource = false;
+
+        for (int i = 0; i < musicSources.Length; i++)
+        {
+            AudioSource source = musicSources[i];
+            if (source == null) continue;
+
+            hasAnySource = true;
+            startVolumes[i] = Mathf.Max(0f, source.volume);
+        }
+
+        if (!hasAnySource) yield break;
+
+        float safeDuration = Mathf.Max(0.0001f, duration);
+        float timer = 0f;
+        while (timer < safeDuration)
+        {
+            timer += Time.unscaledDeltaTime;
+            float t = PixelStep01(timer / safeDuration);
+            for (int i = 0; i < musicSources.Length; i++)
+            {
+                AudioSource source = musicSources[i];
+                if (source == null) continue;
+
+                float targetVolume = startVolumes[i] * Mathf.Max(0f, targetMultiplier);
+                source.volume = Mathf.Lerp(startVolumes[i], targetVolume, t);
+            }
+            yield return null;
+        }
+
+        for (int i = 0; i < musicSources.Length; i++)
+        {
+            AudioSource source = musicSources[i];
+            if (source == null) continue;
+
+            float finalVolume = startVolumes[i] * Mathf.Max(0f, targetMultiplier);
+            source.volume = finalVolume;
+            if (stopWhenFinished && finalVolume <= 0.001f && source.isPlaying) source.Stop();
+        }
+    }
 
     private void OnDestroy()
     {

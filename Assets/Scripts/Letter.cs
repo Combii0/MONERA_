@@ -30,6 +30,10 @@ public class Letter : MonoBehaviour
     [SerializeField] public float interactPromptFontSize = 1.4f;
     [SerializeField] public float interactPromptScale = 2.4f;
 
+    [Header("Audio del Letrero")]
+    [SerializeField] private AudioClip letterTypeSfx;
+    [SerializeField, Range(0f, 1f)] private float letterTypeSfxVolume = 0.65f;
+
     [Header("Animacion Prompt")]
     [SerializeField] private float promptShowDuration = 0.12f;
     [SerializeField] private float promptHideDuration = 0.14f;
@@ -144,7 +148,7 @@ public class Letter : MonoBehaviour
         if (LetterManager.Instance != null)
         {
             HidePromptImmediate();
-            LetterManager.Instance.ReadLetter(screenMessage, player); // ACTUALIZADO PARA COINCIDIR CON LA NUEVA FIRMA
+            LetterManager.Instance.ReadLetter(screenMessage, player, letterTypeSfx, letterTypeSfxVolume);
         }
         else
         {

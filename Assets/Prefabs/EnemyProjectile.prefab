@@ -171,3 +171,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyBullet
   lifetime: 4
   destroyOnWorldHit: 1
+  ignoreProtectorCollision: 1
+  forceRenderOnTop: 1
+  projectileSortingOrder: 120

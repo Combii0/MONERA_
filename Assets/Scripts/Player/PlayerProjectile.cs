@@ -14,7 +14,6 @@ public class PlayerProjectile : MonoBehaviour
     {
         damage = Mathf.Max(1, projectileDamage);
         lifeTime = Mathf.Max(0.05f, projectileLifeTime);
-        Destroy(gameObject, lifeTime);
     }
 
     private void OnEnable()
@@ -35,6 +34,9 @@ public class PlayerProjectile : MonoBehaviour
     private void TryHandleImpact(Collider2D other)
     {
         if (hasHit || other == null) return;
+        
+        // Evitamos que el proyectil intente dañar al propio pingüino
+        if (other.CompareTag("Player")) return;
 
         EnemyHealth enemy = other.GetComponentInParent<EnemyHealth>();
         if (enemy != null)

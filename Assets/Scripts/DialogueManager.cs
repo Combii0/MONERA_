@@ -13,6 +13,11 @@ public struct DialogueLine
 {
     [Tooltip("La imagen del personaje que habla.")]
     public Sprite portrait;
+
+    [Tooltip("Opcional: SFX que suena al confirmar esta linea.")]
+    public AudioClip interactSfx;
+    [Range(0f, 1f)]
+    public float interactSfxVolume;
     
     [TextArea(3, 6)]
     [Tooltip("El texto que dirá el personaje.")]
@@ -43,6 +48,13 @@ public class DialogueManager : MonoBehaviour
     private Coroutine dialogueRoutine;
     private float nextSfxTime;
     private PlayerMovement frozenPlayer;
+    private AudioClip runtimeTypeSfxOverride;
+    private float runtimeTypeSfxVolumeOverride = -1f;
+    private int runtimeFinalLineIndex = -1;
+    private float runtimeDialogueFontSize = -1f;
+    private bool runtimeHidePortraitOnFinalLine;
+    private float cachedFontSize;
+    private bool cachedFontSizeValid;
 
     private void Awake()
     {
@@ -60,6 +72,32 @@ public class DialogueManager : MonoBehaviour
     {
         if (dialogueLines == null || dialogueLines.Length == 0) return;
         if (IsReading) return; 
+
+        ResetRuntimeOverrides();
+
+        IsReading = true; 
+
+        if (dialogueRoutine != null) StopCoroutine(dialogueRoutine);
+        dialogueRoutine = StartCoroutine(DialogueSequence(dialogueLines, player));
+    }
+
+    public void StartDialogue(
+        DialogueLine[] dialogueLines,
+        PlayerMovement player,
+        AudioClip customTypeSfx,
+        float customTypeSfxVolume,
+        int finalLineIndex,
+        float dialogueFontSize,
+        bool hidePortraitOnFinalLine)
+    {
+        if (dialogueLines == null || dialogueLines.Length == 0) return;
+        if (IsReading) return;
+
+        runtimeTypeSfxOverride = customTypeSfx;
+        runtimeTypeSfxVolumeOverride = Mathf.Clamp01(customTypeSfxVolume);
+        runtimeFinalLineIndex = finalLineIndex;
+        runtimeDialogueFontSize = dialogueFontSize;
+        runtimeHidePortraitOnFinalLine = hidePortraitOnFinalLine;
 
         IsReading = true; 
 
@@ -80,14 +118,21 @@ public class DialogueManager : MonoBehaviour
         }
 
         if (dialogueCanvasObject != null) dialogueCanvasObject.SetActive(true);
+        if (textSlot != null)
+        {
+            cachedFontSize = textSlot.fontSize;
+            cachedFontSizeValid = true;
+            if (runtimeDialogueFontSize > 0f) textSlot.fontSize = runtimeDialogueFontSize;
+        }
 
         // Loop through every line of dialogue provided by the NPC
         for (int i = 0; i < lines.Length; i++)
         {
             DialogueLine currentLine = lines[i];
+            bool hidePortraitThisLine = runtimeHidePortraitOnFinalLine && i == runtimeFinalLineIndex;
 
             // Update Image
-            if (currentLine.portrait != null)
+            if (!hidePortraitThisLine && currentLine.portrait != null)
             {
                 imageSlot.gameObject.SetActive(true);
                 imageSlot.sprite = currentLine.portrait;
@@ -131,9 +176,15 @@ public class DialogueManager : MonoBehaviour
             yield return null; // Wait 1 frame to prevent double-click issues
 
             // 2. FASE DE ESPERA (Wait for click to proceed to NEXT line or close)
-            while (!WasInteractPressedThisFrame())
+            while (true)
             {
-                yield return null; 
+                if (WasInteractPressedThisFrame())
+                {
+                    PlayInteractSfx(currentLine);
+                    break;
+                }
+
+                yield return null;
             }
         }
 
@@ -146,9 +197,15 @@ public class DialogueManager : MonoBehaviour
             frozenPlayer = null;
         }
 
+        if (cachedFontSizeValid && textSlot != null)
+        {
+            textSlot.fontSize = cachedFontSize;
+        }
+
         Time.timeScale = 1f;
         IsReading = false; 
         dialogueRoutine = null;
+        ResetRuntimeOverrides();
     }
 
     private bool WasInteractPressedThisFrame()
@@ -183,13 +240,50 @@ public class DialogueManager : MonoBehaviour
 
     private void PlayTypeSfx()
     {
-        if (typeSfx == null) return;
+        AudioClip activeTypeSfx = runtimeTypeSfxOverride != null ? runtimeTypeSfxOverride : typeSfx;
+        if (activeTypeSfx == null) return;
         if (Time.unscaledTime < nextSfxTime) return;
         
         nextSfxTime = Time.unscaledTime + 0.02f;
-        
+
+        float volume = runtimeTypeSfxOverride != null
+            ? Mathf.Clamp01(runtimeTypeSfxVolumeOverride)
+            : Mathf.Clamp01(typeSfxVolume);
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.PlayUiSfx(activeTypeSfx, volume);
+            return;
+        }
+
         AudioSource src = GetComponent<AudioSource>();
         if (src == null) src = gameObject.AddComponent<AudioSource>();
-        src.PlayOneShot(typeSfx, typeSfxVolume);
+        src.PlayOneShot(activeTypeSfx, volume);
+    }
+
+    private void PlayInteractSfx(DialogueLine line)
+    {
+        if (line.interactSfx == null) return;
+
+        float volume = line.interactSfxVolume > 0f ? line.interactSfxVolume : 1f;
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.PlayUiSfx(line.interactSfx, volume);
+            return;
+        }
+
+        AudioSource src = GetComponent<AudioSource>();
+        if (src == null) src = gameObject.AddComponent<AudioSource>();
+        src.PlayOneShot(line.interactSfx, Mathf.Clamp01(volume));
+    }
+
+    private void ResetRuntimeOverrides()
+    {
+        runtimeTypeSfxOverride = null;
+        runtimeTypeSfxVolumeOverride = -1f;
+        runtimeFinalLineIndex = -1;
+        runtimeDialogueFontSize = -1f;
+        runtimeHidePortraitOnFinalLine = false;
+        cachedFontSizeValid = false;
     }
 }

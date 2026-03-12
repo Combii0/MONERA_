@@ -108,11 +108,14 @@ MonoBehaviour:
   letterCollider: {fileID: 3989541239384811662}
   requirePlayerAbove: 1
   minPlayerYFromLetterCenter: -0.1
+  screenMessage: Escribe tu texto aqui...
+  letterFontSize: 50
   requireInteractKey: 1
   interactKey: 101
   promptOffset: {x: 0, y: 1.05, z: 0}
-  promptFontSize: 1.8
   promptSortingOrderBoost: 60
+  interactPromptFontSize: 1.8
+  interactPromptScale: 2.4
   promptShowDuration: 0.12
   promptHideDuration: 0.14
   promptPopScale: 1.08

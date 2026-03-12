@@ -1,0 +1,456 @@
+fileFormatVersion: 2
+guid: e730f1eaf609e4e4cbc321d8944c97b0
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 4570029201659090007
+    second: protectorOver_0
+  - first:
+      213: -1600726213096311623
+    second: protectorOver_1
+  - first:
+      213: -4747953175934997105
+    second: protectorOver_2
+  - first:
+      213: 3206819849501703097
+    second: protectorOver_3
+  - first:
+      213: 827771853864145743
+    second: protectorOver_4
+  - first:
+      213: -8668061758536830456
+    second: protectorOver_5
+  - first:
+      213: 3223372307235203518
+    second: protectorOver_6
+  - first:
+      213: 7590498600115313539
+    second: protectorOver_7
+  - first:
+      213: -3739951096890015188
+    second: protectorOver_8
+  - first:
+      213: 477832691407626146
+    second: protectorOver_9
+  - first:
+      213: 7793879476440254984
+    second: protectorOver_10
+  - first:
+      213: 6081481119977103381
+    second: protectorOver_11
+  - first:
+      213: 1749049326589730204
+    second: protectorOver_12
+  - first:
+      213: -8676023158818372981
+    second: protectorOver_13
+  - first:
+      213: -6917880413196538500
+    second: protectorOver_14
+  - first:
+      213: 4307459131442310764
+    second: protectorOver_15
+  - first:
+      213: 8823214808310977693
+    second: protectorOver_16
+  - first:
+      213: -8452695173098401846
+    second: protectorOver_17
+  - first:
+      213: 994827266445730617
+    second: protectorOver_18
+  - first:
+      213: 5570536133479207651
+    second: protectorOver_19
+  - first:
+      213: 1134935587325623679
+    second: protectorOver_20
+  - first:
+      213: -2167021424473028520
+    second: protectorOver_21
+  - first:
+      213: 4767966452635126626
+    second: protectorOver_22
+  - first:
+      213: -8201016766741023160
+    second: protectorOver_23
+  - first:
+      213: -4570563614475886169
+    second: protectorOver_24
+  - first:
+      213: -8357105738750573662
+    second: protectorOver_25
+  - first:
+      213: 5065156024556328461
+    second: protectorOver_26
+  - first:
+      213: 2895285555271725476
+    second: protectorOver_27
+  - first:
+      213: -2577574070003045958
+    second: protectorOver_28
+  - first:
+      213: -3970397017297701265
+    second: protectorOver_29
+  - first:
+      213: 8528885353024009614
+    second: protectorOver_30
+  - first:
+      213: -2050609205921755072
+    second: protectorOver_31
+  - first:
+      213: -7676873119948853099
+    second: protectorOver_32
+  - first:
+      213: -421203555291842120
+    second: protectorOver_33
+  - first:
+      213: 7620944786041771675
+    second: protectorOver_34
+  - first:
+      213: 2432111522854990078
+    second: protectorOver_35
+  - first:
+      213: -1826053716407942580
+    second: protectorOver_36
+  - first:
+      213: 575087190592493117
+    second: protectorOver_37
+  - first:
+      213: -8773646959353142049
+    second: protectorOver_38
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: protectorOver_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7545d0a88510c6f30800000000000000
+      internalID: 4570029201659090007
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: protectorOver_1
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9b4fcbd7df319c9e0800000000000000
+      internalID: -1600726213096311623
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: protectorOver_2
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f8de4320eb1eb1eb0800000000000000
+      internalID: -4747953175934997105
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: protectorOver_3
+      rect:
+        serializedVersion: 2
+        x: 192
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9bb7834a9a9e08c20800000000000000
+      internalID: 3206819849501703097
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: protectorOver_4
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f4393a88d16dc7b00800000000000000
+      internalID: 827771853864145743
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: protectorOver_5
+      rect:
+        serializedVersion: 2
+        x: 320
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 802b34781cbd4b780800000000000000
+      internalID: -8668061758536830456
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: protectorOver_6
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eb9e5970908bbbc20800000000000000
+      internalID: 3223372307235203518
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: protectorOver_7
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 38b19f7b24ed65960800000000000000
+      internalID: 7590498600115313539
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: protectorOver_8
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 0
+        width: 64
+        height: 64
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c22c980ea46091cc0800000000000000
+      internalID: -3739951096890015188
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: abc57e93f5b044e208b12c50d71c8054
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":64.0,"y":64.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      protectorOver_0: 4570029201659090007
+      protectorOver_1: -1600726213096311623
+      protectorOver_2: -4747953175934997105
+      protectorOver_3: 3206819849501703097
+      protectorOver_4: 827771853864145743
+      protectorOver_5: -8668061758536830456
+      protectorOver_6: 3223372307235203518
+      protectorOver_7: 7590498600115313539
+      protectorOver_8: -3739951096890015188
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -13,8 +13,12 @@ GameObject:
   - component: {fileID: 4126905705127235184}
   - component: {fileID: 4047884814742846175}
   - component: {fileID: 5662814738480651372}
-  - component: {fileID: 3188857982023874853}
   - component: {fileID: 412532706484141992}
+  - component: {fileID: 3188857982023874853}
+  - component: {fileID: 8448999586756814177}
+  - component: {fileID: 3072064040954123012}
+  - component: {fileID: -7128399775161031456}
+  - component: {fileID: 2883176461315048805}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -179,7 +183,7 @@ Animator:
   m_GameObject: {fileID: 7317056690778865953}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: a1a968053a9ed244da8acc77b0a49da1, type: 2}
+  m_Controller: {fileID: 9100000, guid: adf67cf8de2864bb4846829d8d61f33e, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -191,86 +195,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &3188857982023874853
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7317056690778865953}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4939eda7afbbd6245b4b78aef64a2f71, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
-  moveSpeed: 6
-  groundAcceleration: 60
-  groundDeceleration: 70
-  airAcceleration: 35
-  airDeceleration: 25
-  forceFrictionlessContact: 1
-  jumpForce: 10
-  enableDoubleJump: 1
-  doubleJumpForce: 9
-  coyoteTime: 0.12
-  jumpBufferTime: 0.12
-  fallGravityMultiplier: 2.2
-  lowJumpGravityMultiplier: 1.8
-  maxFallSpeed: 22
-  groundLayer:
-    serializedVersion: 2
-    m_Bits: 134217728
-  groundCheckExtra: 0.1
-  enableWallJump: 1
-  wallJumpForce: {x: 8.5, y: 8}
-  wallJumpInputLockTime: 0.12
-  wallSlideSpeed: 2.6
-  wallCheckDistance: 0.08
-  wallCheckTopRatio: 0.7
-  wallCheckMidRatio: 0.45
-  enableAdaptiveTint: 1
-  tintSampleRadius: 2.25
-  tintInfluence: 0.35
-  pastelAmount: 0.45
-  ambientInfluence: 0.25
-  tintSampleLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  tintUpdateInterval: 0.08
-  tintSmoothing: 7
-  tintMaxSamples: 20
-  tintFallbackColor: {r: 1, g: 1, b: 1, a: 1}
-  detectEnemyContacts: 1
-  contactKnockbackForce: 8.5
-  contactKnockbackUpward: 2.4
-  contactFlashDuration: 0.5
-  contactInvulnerabilityDuration: 2
-  invulnerabilityRefreshInterval: 0.12
-  showInvulnerabilityBlink: 1
-  invulnerabilityBlinkSpeed: 12
-  invulnerabilityBlinkStrength: 0.93
-  invulnerabilityBlinkColor: {r: 1, g: 1, b: 1, a: 1}
-  damageFlashColor: {r: 1, g: 0.16, b: 0.16, a: 1}
-  damageFlashStrength: 0.92
-  enableShooting: 1
-  projectilePrefab: {fileID: 2131880803640463534, guid: b58b01d9bdfb5f8418ed2fe1acec0c99, type: 3}
-  projectileSprite: {fileID: -1935656848456677730, guid: 0f03cbebd3e9f4186a6261b8f408aba5, type: 3}
-  projectileSpeed: 14
-  projectileDamage: 1
-  projectileLifetime: 2.5
-  shootCooldown: 0.2
-  shootSpawnOffset: {x: 0.55, y: 0.05}
-  projectileColliderRadius: 0.12
-  projectileScale: 1
-  projectileSortingOrderOffset: 2
-  projectileColor: {r: 1, g: 1, b: 1, a: 1}
-  sfxSource: {fileID: 412532706484141992}
-  jumpSfx: {fileID: 0}
-  hurtSfx: {fileID: 8300000, guid: ce8080f4fdb2843bda76f6b51684ca56, type: 3}
-  projectileShootSfx: {fileID: 8300000, guid: cec812c40de8f458392f05779525c610, type: 3}
-  jumpSfxVolume: 1
-  hurtSfxVolume: 1
-  projectileShootSfxVolume: 0.9
 --- !u!82 &412532706484141992
 AudioSource:
   m_ObjectHideFlags: 0
@@ -368,3 +292,131 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &3188857982023874853
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7317056690778865953}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4939eda7afbbd6245b4b78aef64a2f71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
+  moveSpeed: 6
+  groundAcceleration: 60
+  groundDeceleration: 70
+  airAcceleration: 35
+  airDeceleration: 25
+  forceFrictionlessContact: 1
+  jumpForce: 10
+  enableDoubleJump: 1
+  doubleJumpForce: 9
+  coyoteTime: 0.12
+  jumpBufferTime: 0.12
+  fallGravityMultiplier: 2.2
+  lowJumpGravityMultiplier: 1.8
+  maxFallSpeed: 22
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 134217728
+  groundCheckExtra: 0.1
+  enableWallJump: 1
+  wallJumpForce: {x: 8.5, y: 8}
+  wallJumpInputLockTime: 0.12
+  wallSlideSpeed: 2.6
+  wallCheckDistance: 0.08
+  wallCheckTopRatio: 0.7
+  wallCheckMidRatio: 0.45
+  sfxSource: {fileID: 412532706484141992}
+  jumpSfx: {fileID: 0}
+  jumpSfxVolume: 1
+--- !u!114 &8448999586756814177
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7317056690778865953}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eae8e55d309f7194588d41b86681aa7c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimation
+--- !u!114 &3072064040954123012
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7317056690778865953}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc74b4e4ac7976342b76cfb7f779b5de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerShooting
+  enableShooting: 1
+  projectilePrefab: {fileID: 2131880803640463534, guid: b58b01d9bdfb5f8418ed2fe1acec0c99, type: 3}
+  projectileSprite: {fileID: -1935656848456677730, guid: 0f03cbebd3e9f4186a6261b8f408aba5, type: 3}
+  projectileSpeed: 14
+  projectileDamage: 1
+  projectileLifetime: 2.5
+  shootCooldown: 0.2
+  shootSpawnOffset: {x: 0.55, y: 0.05}
+  projectileColliderRadius: 0.12
+  projectileScale: 1
+  projectileSortingOrderOffset: 2
+  projectileColor: {r: 1, g: 1, b: 1, a: 1}
+  projectileShootSfx: {fileID: 8300000, guid: cec812c40de8f458392f05779525c610, type: 3}
+  projectileShootSfxVolume: 0.9
+--- !u!114 &-7128399775161031456
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7317056690778865953}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52fea7d69c821fe41a657292b0df72de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
+  detectEnemyContacts: 1
+  contactKnockbackForce: 8.5
+  contactKnockbackUpward: 2.4
+  contactFlashDuration: 0.5
+  contactInvulnerabilityDuration: 1
+  invulnerabilityRefreshInterval: 0.12
+  showInvulnerabilityBlink: 1
+  invulnerabilityBlinkSpeed: 12
+  invulnerabilityBlinkStrength: 0.55
+  invulnerabilityBlinkColor: {r: 1, g: 1, b: 1, a: 1}
+  damageFlashColor: {r: 1, g: 0.16, b: 0.16, a: 1}
+  damageFlashStrength: 0.92
+  hurtSfx: {fileID: 8300000, guid: ce8080f4fdb2843bda76f6b51684ca56, type: 3}
+  hurtSfxVolume: 1
+--- !u!114 &2883176461315048805
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7317056690778865953}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e847a2c91478dd458f1b357571d679e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerVisuals
+  enableAdaptiveTint: 1
+  tintSampleRadius: 2.25
+  tintInfluence: 0.35
+  pastelAmount: 0.45
+  ambientInfluence: 0.25
+  tintSampleLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  tintUpdateInterval: 0.08
+  tintSmoothing: 7
+  tintMaxSamples: 20
+  tintFallbackColor: {r: 1, g: 1, b: 1, a: 1}
