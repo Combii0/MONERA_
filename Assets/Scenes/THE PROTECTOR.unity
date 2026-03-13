@@ -951,6 +951,12 @@ MonoBehaviour:
   allowLivesAboveMax: 1
   hpText: {fileID: 168520353}
   hpPrefix: 'HPS: '
+  caveSceneName: The Cave
+  protectorSceneName: THE PROTECTOR
+  postProtectorSceneName: The Tunnel
+  caveStartLives: 3
+  protectorMinimumEntryLives: 3
+  postProtectorMinimumEntryLives: 4
   hpColorMedium: {r: 1, g: 0.65, b: 0, a: 1}
   hpColorLow: {r: 1, g: 0, b: 0, a: 1}
   hpFlashDuration: 0.5
@@ -4080,7 +4086,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6f825d91df8046468415ab7e3d4e114, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Protector
-  maxHealth: 60
+  maxHealth: 80
   hitCooldown: 0.08
   damageTags:
   - PlayerAttack
@@ -4126,7 +4132,7 @@ MonoBehaviour:
   disableMovementScriptOnDeath: 1
   deathTintColor: {r: 1, g: 1, b: 1, a: 1}
   killAllEnemiesOnDeath: 1
-  victorySceneName: The Tunnel
+  victorySceneName: MenuMonera
   deathFinalFadeOutDuration: 1.8
   deathBlackScreenHoldSeconds: 3
   deathFadeSteps: 28
@@ -4138,10 +4144,10 @@ MonoBehaviour:
   deathCameraZoomDuration: 1.2
   deathCameraTargetOrthoSize: 2.6
   deathCameraTargetFieldOfView: 38
-  movementChangeIntervalSeconds: 5
-  sweepAttackChancePerInterval: 0.3
-  summonerAttackChancePerInterval: 0.3
-  tpAttackChancePerInterval: 0.3
+  movementChangeIntervalSeconds: 3
+  sweepAttackChancePerInterval: 0.4
+  summonerAttackChancePerInterval: 0.2
+  tpAttackChancePerInterval: 0.4
   alternateAttackAndMovement: 1
   isInvulnerable: 0
 --- !u!114 &1402061719
@@ -4198,8 +4204,8 @@ MonoBehaviour:
   postDeathAudioClip: {fileID: 8300000, guid: d27860a11c55f49ecbd1b3954733b8e9, type: 3}
   postDeathAudioStartTime: 0.3
   useCustomPostDeathFlow: 1
-  rewardMessage: Congratullations! For murdering, you are more powerfull now!(+1
-    more life)
+  rewardMessage: Congratullations! For murdering, you are more powerfull now!(Thank
+    you for playing the DEMO of Monera <3)
   waitAfterConfirmSeconds: 2
   extraLivesReward: 1
   rewardFontSize: 52

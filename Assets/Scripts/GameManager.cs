@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.Serialization;
@@ -112,10 +113,20 @@ public class GameManager : MonoBehaviour
     private static bool hasPendingSceneIntroFadeOverride;
     private static float pendingSceneIntroFadeDuration = -1f;
     private static int pendingSceneIntroFadeSteps = -1;
+    private static bool hasPendingSceneIntroAudioFadeOverride;
+    private static float pendingSceneIntroAudioFadeDuration = -1f;
+    private readonly List<SceneIntroAudioState> sceneIntroAudioStates = new List<SceneIntroAudioState>(4);
+    private float queuedSceneIntroAudioFadeDuration = -1f;
     public static int PersistentPlayerLives { get; private set; }
     public static int CurrentSceneCheckpointLives { get; private set; }
     public static string CurrentSceneCheckpointName { get; private set; }
     private static bool persistentLivesInitialized;
+
+    private struct SceneIntroAudioState
+    {
+        public AudioSource source;
+        public float targetVolume;
+    }
 
     public static GameManager Instance { get; private set; }
     public float InstantDeathY => instantDeathY;
@@ -126,6 +137,12 @@ public class GameManager : MonoBehaviour
         hasPendingSceneIntroFadeOverride = true;
         pendingSceneIntroFadeDuration = Mathf.Max(0.05f, durationSeconds);
         pendingSceneIntroFadeSteps = Mathf.Max(2, stepCount);
+    }
+
+    public static void ConfigureNextSceneIntroAudioFade(float durationSeconds)
+    {
+        hasPendingSceneIntroAudioFadeOverride = true;
+        pendingSceneIntroAudioFadeDuration = Mathf.Max(0.05f, durationSeconds);
     }
 
     private void Awake()
@@ -141,10 +158,21 @@ public class GameManager : MonoBehaviour
         ResolveReferences();
         SetProtectorAudioBlend(0f);
         RefreshHpLabel();
+
+        queuedSceneIntroAudioFadeDuration = ConsumePendingSceneIntroAudioFadeDuration();
+        if (queuedSceneIntroAudioFadeDuration > 0f)
+        {
+            PrepareSceneIntroAudioFade();
+        }
     }
 
     private void Start()
     {
+        if (queuedSceneIntroAudioFadeDuration > 0f && sceneIntroAudioStates.Count > 0)
+        {
+            StartCoroutine(FadePreparedIntroAudioSourcesRoutine(queuedSceneIntroAudioFadeDuration));
+        }
+
         if (transitionCanvas != null && transitionFadeImage != null)
         {
             StartCoroutine(FadeInRoutine());
@@ -623,6 +651,76 @@ public class GameManager : MonoBehaviour
     public void ResetProtectorAudioBlend()
     {
         SetProtectorAudioBlend(0f);
+    }
+
+    private static float ConsumePendingSceneIntroAudioFadeDuration()
+    {
+        if (!hasPendingSceneIntroAudioFadeOverride) return -1f;
+
+        float duration = Mathf.Max(0.05f, pendingSceneIntroAudioFadeDuration);
+        hasPendingSceneIntroAudioFadeOverride = false;
+        pendingSceneIntroAudioFadeDuration = -1f;
+        return duration;
+    }
+
+    private bool PrepareSceneIntroAudioFade()
+    {
+        sceneIntroAudioStates.Clear();
+        ResolveMusicSourcesIfNeeded();
+        if (!musicVolumesCached) CacheMusicBaseVolumes();
+
+        AudioSource[] sources = FindObjectsByType<AudioSource>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        for (int i = 0; i < sources.Length; i++)
+        {
+            AudioSource source = sources[i];
+            if (source == null || source.clip == null) continue;
+            if (!source.isPlaying && !source.playOnAwake) continue;
+
+            float targetVolume = Mathf.Max(0f, source.volume);
+            if (targetVolume <= 0.0001f) continue;
+
+            sceneIntroAudioStates.Add(new SceneIntroAudioState
+            {
+                source = source,
+                targetVolume = targetVolume
+            });
+
+            source.volume = 0f;
+            if (!source.isPlaying) source.Play();
+        }
+
+        return sceneIntroAudioStates.Count > 0;
+    }
+
+    private IEnumerator FadePreparedIntroAudioSourcesRoutine(float duration)
+    {
+        if (sceneIntroAudioStates.Count == 0) yield break;
+
+        float safeDuration = Mathf.Max(0.0001f, duration);
+        float timer = 0f;
+        while (timer < safeDuration)
+        {
+            timer += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(timer / safeDuration);
+
+            for (int i = 0; i < sceneIntroAudioStates.Count; i++)
+            {
+                SceneIntroAudioState state = sceneIntroAudioStates[i];
+                if (state.source == null) continue;
+                state.source.volume = Mathf.Lerp(0f, state.targetVolume, t);
+            }
+
+            yield return null;
+        }
+
+        for (int i = 0; i < sceneIntroAudioStates.Count; i++)
+        {
+            SceneIntroAudioState state = sceneIntroAudioStates[i];
+            if (state.source == null) continue;
+            state.source.volume = state.targetVolume;
+        }
+
+        sceneIntroAudioStates.Clear();
     }
 
     private IEnumerator FadeInRoutine()
