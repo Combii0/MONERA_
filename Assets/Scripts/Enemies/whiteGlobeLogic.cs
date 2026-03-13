@@ -29,6 +29,10 @@ public class whiteGlobeLogic : MonoBehaviour
     [SerializeField] private float timeBetweenShots = 0.2f;
     [SerializeField] private float shootSpawnOffset = 0.5f;
 
+    [Header("Audio")]
+    [SerializeField] private AudioClip chargeSfx;
+    [SerializeField, Range(0f, 1f)] private float chargeSfxVolume = 1f;
+
     [Header("X Follow (Delay)")]
     [SerializeField] private bool followPlayerX = true;
     [SerializeField, Min(0f)] private float followXDelaySeconds = 1f;
@@ -55,6 +59,7 @@ public class whiteGlobeLogic : MonoBehaviour
     private Rigidbody2D rb;
     private EnemyHealth health;
     private Transform playerTarget;
+    private AudioSource sfxSource;
 
     private float burstTimer;
     private bool isActive;
@@ -79,6 +84,7 @@ public class whiteGlobeLogic : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         health = GetComponent<EnemyHealth>();
+        sfxSource = GetComponent<AudioSource>();
 
         if (rb != null)
         {
@@ -223,10 +229,30 @@ public class whiteGlobeLogic : MonoBehaviour
 
         isActive = true;
         SetCianCircleVisible(false);
+        PlayChargeSfx();
 
         xHistory.Clear();
         delayedTargetX = rb != null ? rb.position.x : transform.position.x;
         xFollowVelocity = 0f;
+    }
+
+    private void PlayChargeSfx()
+    {
+        if (chargeSfx == null) return;
+
+        if (sfxSource == null)
+        {
+            sfxSource = GetComponent<AudioSource>();
+            if (sfxSource == null)
+            {
+                sfxSource = gameObject.AddComponent<AudioSource>();
+            }
+
+            sfxSource.playOnAwake = false;
+            sfxSource.loop = false;
+        }
+
+        sfxSource.PlayOneShot(chargeSfx, Mathf.Clamp01(chargeSfxVolume));
     }
 
     private void DeactivateWhiteGlobe()

@@ -7,6 +7,10 @@ public class ProtectorMoving : MonoBehaviour
 {
     public event Action OnEntrySequenceFinished;
     public bool IsEntrySequenceFinished => canMove && animatorReleased;
+    public bool IsEntryStateActive =>
+        protectorAnimator != null &&
+        protectorAnimator.isActiveAndEnabled &&
+        IsEntryState(protectorAnimator.GetCurrentAnimatorStateInfo(0));
 
     [Header("Entry / Idle")]
     [SerializeField] private Animator protectorAnimator;

@@ -143,6 +143,17 @@ public class EnemyHealth : MonoBehaviour
     private void TryReceiveTagDamage(GameObject damageSource)
     {
         if (isDead || damageSource == null) return;
+
+        PlayerProjectile projectile = damageSource.GetComponentInParent<PlayerProjectile>();
+        if (projectile != null)
+        {
+            if (!projectile.TryConsumeImpactDamage(out int projectileDamage)) return;
+
+            TakeDamage(projectileDamage);
+            nextAllowedHitTime = Time.time + hitCooldown;
+            return;
+        }
+
         if (Time.time < nextAllowedHitTime) return;
 
         for (int i = 0; i < damageTags.Length; i++)

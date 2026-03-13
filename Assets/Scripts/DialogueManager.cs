@@ -29,6 +29,13 @@ public class DialogueManager : MonoBehaviour
     public static DialogueManager Instance { get; private set; }
 
     public bool IsReading { get; private set; } 
+    public TMP_FontAsset DialogueFontAsset => textSlot != null ? textSlot.font : null;
+    public Material DialogueFontMaterial => textSlot != null ? textSlot.fontSharedMaterial : null;
+    public FontStyles DialogueFontStyle => textSlot != null ? textSlot.fontStyle : FontStyles.Normal;
+    public Color DialogueTextColor => textSlot != null ? textSlot.color : Color.white;
+    public float RevealCharsPerSecond => revealCharsPerSecond;
+    public AudioClip DefaultTypeSfx => typeSfx;
+    public float DefaultTypeSfxVolume => typeSfxVolume;
 
     [Header("Referencias UI")]
     [Tooltip("El Canvas del diálogo (DialogueCanvas)")]

@@ -26,6 +26,10 @@ public class ProtectorSummoner : MonoBehaviour
     [SerializeField] private float summonSpawnZ = 0f;
     [SerializeField, Min(0.01f)] private float summonFadeInDuration = 0.35f;
 
+    [Header("Audio")]
+    [SerializeField] private AudioClip summonWhiteGlobesSfx;
+    [SerializeField, Range(0f, 1f)] private float summonWhiteGlobesSfxVolume = 1f;
+
     [Header("Safety")]
     [SerializeField, Min(0.5f)] private float minimumRuntimeMoveSpeed = 6f;
     [SerializeField, Min(0.1f)] private float moveTimeoutPaddingSeconds = 0.75f;
@@ -42,6 +46,7 @@ public class ProtectorSummoner : MonoBehaviour
     private bool hasForcedWorldPosition;
     private Vector2 forcedWorldPosition;
     private float fixedZ;
+    private AudioSource summonSfxSource;
 
     private int summonerStateHash;
     private int summonerStateFullPathHash;
@@ -54,6 +59,7 @@ public class ProtectorSummoner : MonoBehaviour
         protector = GetComponent<Protector>();
         protectorMoving = GetComponent<ProtectorMoving>();
         protectorAnimator = GetComponent<Animator>();
+        summonSfxSource = GetComponent<AudioSource>();
 
         fixedZ = transform.position.z;
 
@@ -258,9 +264,29 @@ public class ProtectorSummoner : MonoBehaviour
         }
 
         Transform parent = ResolveSummonedEnemiesContainer();
+        PlaySummonWhiteGlobesSfx();
 
         SpawnSingleWhiteGlobe(rightSpawnPoint, parent);
         SpawnSingleWhiteGlobe(leftSpawnPoint, parent);
+    }
+
+    private void PlaySummonWhiteGlobesSfx()
+    {
+        if (summonWhiteGlobesSfx == null) return;
+
+        if (summonSfxSource == null)
+        {
+            summonSfxSource = GetComponent<AudioSource>();
+            if (summonSfxSource == null)
+            {
+                summonSfxSource = gameObject.AddComponent<AudioSource>();
+            }
+
+            summonSfxSource.playOnAwake = false;
+            summonSfxSource.loop = false;
+        }
+
+        summonSfxSource.PlayOneShot(summonWhiteGlobesSfx, Mathf.Clamp01(summonWhiteGlobesSfxVolume));
     }
 
     private void SpawnSingleWhiteGlobe(Vector2 spawnPoint, Transform parent)

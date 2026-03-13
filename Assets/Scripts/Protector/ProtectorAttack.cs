@@ -31,6 +31,11 @@ public class ProtectorAttack : MonoBehaviour
     public Sprite sweepAttackSprite;
     [SerializeField] private SpriteRenderer attackSpriteRenderer;
 
+    [Header("Audio De Embestida")]
+    public AudioClip chargeSfx;
+    [SerializeField, Range(0f, 1f)] private float chargeSfxVolume = 1f;
+    [SerializeField] private AudioSource chargeSfxSource;
+
     [Header("Referencias")]
     [SerializeField] private Transform playerTarget;
     [SerializeField] private GameObject cianBacteriaCircle;
@@ -130,6 +135,7 @@ public class ProtectorAttack : MonoBehaviour
         }
 
         // 2) Embestida rápida hacia el lado contrario con sprite de ataque y frenado suave.
+        PlayChargeSfx();
         BeginSweepSpriteOverride();
         yield return SweepToWithSoftBrake(sweepTargetPoint);
         EndSweepSpriteOverride();
@@ -283,6 +289,36 @@ public class ProtectorAttack : MonoBehaviour
         {
             attackSpriteRenderer.sprite = cachedSpriteBeforeSweep;
         }
+    }
+
+    private void PlayChargeSfx()
+    {
+        if (chargeSfx == null) return;
+
+        AudioSource source = ResolveChargeSfxSource();
+        if (source == null) return;
+
+        source.PlayOneShot(chargeSfx, Mathf.Clamp01(chargeSfxVolume));
+    }
+
+    private AudioSource ResolveChargeSfxSource()
+    {
+        if (chargeSfxSource != null)
+        {
+            chargeSfxSource.playOnAwake = false;
+            chargeSfxSource.loop = false;
+            return chargeSfxSource;
+        }
+
+        chargeSfxSource = GetComponent<AudioSource>();
+        if (chargeSfxSource == null)
+        {
+            chargeSfxSource = gameObject.AddComponent<AudioSource>();
+        }
+
+        chargeSfxSource.playOnAwake = false;
+        chargeSfxSource.loop = false;
+        return chargeSfxSource;
     }
 
     private Vector2 GetCurrentPosition()

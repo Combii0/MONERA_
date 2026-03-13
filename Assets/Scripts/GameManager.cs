@@ -16,6 +16,14 @@ public class GameManager : MonoBehaviour
     [SerializeField] private bool allowLivesAboveMax = true;
     [SerializeField] private TMP_Text hpText;
     [SerializeField] private string hpPrefix = "HPS: ";
+
+    [Header("Persistencia De Vida")]
+    [SerializeField] private string caveSceneName = "The Cave";
+    [SerializeField] private string protectorSceneName = "THE PROTECTOR";
+    [SerializeField] private string postProtectorSceneName = "The Tunnel";
+    [SerializeField, Min(1)] private int caveStartLives = 3;
+    [SerializeField, Min(1)] private int protectorMinimumEntryLives = 3;
+    [SerializeField, Min(1)] private int postProtectorMinimumEntryLives = 4;
     
     [Header("Colores Vida")]
     [SerializeField] private Color hpColorMedium = new Color(1f, 0.65f, 0f, 1f); // 2 (Naranja/Amarillo)
@@ -45,7 +53,6 @@ public class GameManager : MonoBehaviour
     [Header("Pantalla Muerte & Fades")]
     [SerializeField] private float deathFadeDuration = 0.8f;
     [SerializeField] private Color deathBackgroundColor = Color.black;
-    [SerializeField] private float musicFadeDuration = 1f;
     [SerializeField, Range(2, 20)] private int pixelFadeSteps = 12;
 
     [Header("Niveles")]
@@ -100,9 +107,15 @@ public class GameManager : MonoBehaviour
     private bool musicVolumesCached;
     private float mainMusicBaseVolume = 1f;
     private float backgroundMusicBaseVolume = 1f;
+    private Coroutine protectorMusicTransitionRoutine;
+    private bool protectorBackgroundSuppressed;
     private static bool hasPendingSceneIntroFadeOverride;
     private static float pendingSceneIntroFadeDuration = -1f;
     private static int pendingSceneIntroFadeSteps = -1;
+    public static int PersistentPlayerLives { get; private set; }
+    public static int CurrentSceneCheckpointLives { get; private set; }
+    public static string CurrentSceneCheckpointName { get; private set; }
+    private static bool persistentLivesInitialized;
 
     public static GameManager Instance { get; private set; }
     public float InstantDeathY => instantDeathY;
@@ -124,7 +137,7 @@ public class GameManager : MonoBehaviour
         }
 
         Instance = this;
-        currentLives = Mathf.Max(1, maxLives);
+        InitializeLivesForCurrentScene();
         ResolveReferences();
         SetProtectorAudioBlend(0f);
         RefreshHpLabel();
@@ -169,8 +182,7 @@ public class GameManager : MonoBehaviour
         if (currentLives <= 0 || Time.time < nextAllowedHitTime) return false;
 
         nextAllowedHitTime = Time.time + hitCooldown;
-        currentLives = Mathf.Max(0, currentLives - 1);
-        
+        SetCurrentLives(Mathf.Max(0, currentLives - 1), refreshLabel: false);
         RefreshHpLabel();
         FlashHpText(HpDamageFlashColor, hpFlashDuration);
 
@@ -195,8 +207,8 @@ public class GameManager : MonoBehaviour
         if (!allowLivesAboveMax) nextLives = Mathf.Min(nextLives, maxLives);
 
         if (nextLives == previousLives) return false;
-        
-        currentLives = nextLives;
+
+        SetCurrentLives(nextLives, refreshLabel: false);
         RefreshHpLabel();
         FlashHpText(HpHealFlashColor, hpHealFlashDuration);
         return true;
@@ -389,7 +401,7 @@ public class GameManager : MonoBehaviour
     {
         LockAndStopMusicPlaybackImmediate();
         PlayFallDeathSfx();
-        currentLives = 0;
+        SetCurrentLives(0, refreshLabel: false);
         RefreshHpLabel();
         StartDeathSequence();
     }
@@ -415,6 +427,168 @@ public class GameManager : MonoBehaviour
         source.PlayOneShot(clip, finalVolume);
     }
 
+    public void PlayEncounterMusic(
+        AudioClip encounterMainClip,
+        float encounterMainVolume,
+        AudioClip encounterBackgroundClip,
+        float encounterBackgroundVolume)
+    {
+        PlayEncounterBackgroundLoop(encounterBackgroundClip, encounterBackgroundVolume);
+        PlayEncounterMainTheme(encounterMainClip, encounterMainVolume);
+    }
+
+    public void PlayEncounterBackgroundLoop(AudioClip encounterBackgroundClip, float encounterBackgroundVolume)
+    {
+        if (deathSequenceStarted || encounterBackgroundClip == null) return;
+
+        musicPlaybackLocked = false;
+        protectorBackgroundSuppressed = false;
+        ResolveMusicSourcesIfNeeded();
+        StopProtectorMusicTransitionRoutine();
+
+        if (backgroundMusicSource == null)
+        {
+            backgroundMusicSource = CreateRuntimeMusicSource("RuntimeBackgroundMusicSource");
+        }
+
+        backgroundMusicClip = encounterBackgroundClip;
+        backgroundMusicBaseVolume = Mathf.Clamp01(encounterBackgroundVolume);
+        musicVolumesCached = true;
+
+        PrepareMusicSource(backgroundMusicSource, loop: true, backgroundMusicBaseVolume);
+        backgroundMusicSource.clip = backgroundMusicClip;
+        backgroundMusicSource.Stop();
+        backgroundMusicSource.time = 0f;
+        backgroundMusicSource.Play();
+    }
+
+    public void StartProtectorCombatMusic(
+        AudioClip encounterMainClip,
+        float encounterMainVolume,
+        float backgroundFadeOutDuration = 0.12f)
+    {
+        if (deathSequenceStarted) return;
+
+        musicPlaybackLocked = false;
+        protectorBackgroundSuppressed = true;
+        ResolveMusicSourcesIfNeeded();
+        StopProtectorMusicTransitionRoutine();
+
+        PlayEncounterMainTheme(encounterMainClip, encounterMainVolume);
+
+        if (backgroundMusicSource == null) return;
+
+        if (backgroundFadeOutDuration <= 0.0001f)
+        {
+            backgroundMusicSource.volume = 0f;
+            StopMusicSource(backgroundMusicSource);
+            return;
+        }
+
+        protectorMusicTransitionRoutine = StartCoroutine(
+            FadeMusicSourceRoutine(
+                backgroundMusicSource,
+                0f,
+                backgroundFadeOutDuration,
+                stopWhenFinished: true));
+    }
+
+    public void PlayEncounterMainTheme(AudioClip encounterMainClip, float encounterMainVolume)
+    {
+        if (deathSequenceStarted || encounterMainClip == null) return;
+
+        musicPlaybackLocked = false;
+        ResolveMusicSourcesIfNeeded();
+
+        if (mainMusicSource == null)
+        {
+            mainMusicSource = CreateRuntimeMusicSource("RuntimeMainMusicSource");
+        }
+
+        mainMusicClip = encounterMainClip;
+        mainMusicBaseVolume = Mathf.Clamp01(encounterMainVolume);
+        musicVolumesCached = true;
+
+        PrepareMusicSource(mainMusicSource, loop: false, mainMusicBaseVolume);
+        mainMusicSource.Stop();
+        mainMusicSource.clip = mainMusicClip;
+        mainMusicSource.time = 0f;
+        mainMusicSource.Play();
+    }
+
+    public void TransitionProtectorDeathMusic(float backgroundFadeInDuration = 0.35f)
+    {
+        if (deathSequenceStarted) return;
+
+        musicPlaybackLocked = false;
+        protectorBackgroundSuppressed = false;
+        ResolveMusicSourcesIfNeeded();
+        if (!musicVolumesCached) CacheMusicBaseVolumes();
+        StopProtectorMusicTransitionRoutine();
+
+        if (mainMusicSource != null)
+        {
+            mainMusicSource.volume = 0f;
+            StopMusicSource(mainMusicSource);
+        }
+
+        if (backgroundMusicClip == null) return;
+
+        if (backgroundMusicSource == null)
+        {
+            backgroundMusicSource = CreateRuntimeMusicSource("RuntimeBackgroundMusicSource");
+        }
+
+        PrepareMusicSource(backgroundMusicSource, loop: true, 0f);
+        backgroundMusicSource.clip = backgroundMusicClip;
+        if (!backgroundMusicSource.isPlaying)
+        {
+            backgroundMusicSource.Stop();
+            backgroundMusicSource.time = 0f;
+            backgroundMusicSource.Play();
+        }
+
+        float targetVolume = Mathf.Clamp01(backgroundMusicBaseVolume);
+        if (backgroundFadeInDuration <= 0.0001f)
+        {
+            backgroundMusicSource.volume = targetVolume;
+            return;
+        }
+
+        protectorMusicTransitionRoutine = StartCoroutine(
+            FadeMusicSourceRoutine(
+                backgroundMusicSource,
+                targetVolume,
+                backgroundFadeInDuration,
+                stopWhenFinished: false));
+    }
+
+    public void StopConfiguredMusicImmediate()
+    {
+        StopProtectorMusicTransitionRoutine();
+        LockAndStopMusicPlaybackImmediate();
+    }
+
+    public void StopMainMusicKeepBackground()
+    {
+        if (deathSequenceStarted) return;
+
+        musicPlaybackLocked = false;
+        protectorBackgroundSuppressed = false;
+        ResolveMusicSourcesIfNeeded();
+        if (!musicVolumesCached) CacheMusicBaseVolumes();
+        StopProtectorMusicTransitionRoutine();
+
+        StopMusicSource(mainMusicSource);
+
+        if (backgroundMusicSource != null)
+        {
+            PrepareMusicSource(backgroundMusicSource, loop: true, backgroundMusicBaseVolume);
+            backgroundMusicSource.volume = Mathf.Clamp01(backgroundMusicBaseVolume);
+            EnsureMusicPlayback(backgroundMusicSource, backgroundMusicClip);
+        }
+    }
+
     public void SetProtectorAudioBlend(float blend01)
     {
         if (musicPlaybackLocked || deathSequenceStarted) return;
@@ -432,10 +606,17 @@ public class GameManager : MonoBehaviour
 
         if (backgroundMusicSource != null)
         {
-            float boostMultiplier = Mathf.Max(1f, backgroundBoostNearProtector);
-            float targetVolume = backgroundMusicBaseVolume * Mathf.Lerp(1f, boostMultiplier, t);
-            backgroundMusicSource.volume = Mathf.Clamp01(targetVolume);
-            EnsureMusicPlayback(backgroundMusicSource, backgroundMusicClip);
+            if (protectorBackgroundSuppressed)
+            {
+                backgroundMusicSource.volume = 0f;
+            }
+            else
+            {
+                float boostMultiplier = Mathf.Max(1f, backgroundBoostNearProtector);
+                float targetVolume = backgroundMusicBaseVolume * Mathf.Lerp(1f, boostMultiplier, t);
+                backgroundMusicSource.volume = Mathf.Clamp01(targetVolume);
+                EnsureMusicPlayback(backgroundMusicSource, backgroundMusicClip);
+            }
         }
     }
 
@@ -556,10 +737,18 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 0f;
     }
 
-    public void LoadRestartScene() => sceneChanger?.Restart();
+    public void LoadRestartScene()
+    {
+        PreparePersistentLivesForRestart();
+        sceneChanger?.Restart();
+    }
     public void LoadMenuScene() => sceneChanger?.Menu();
     
-    public void LoadFirstLevel() => TransitionToScene(firstLevelSceneIndex);
+    public void LoadFirstLevel()
+    {
+        ResetPersistentLivesSession();
+        TransitionToScene(firstLevelSceneIndex);
+    }
 
     public void TransitionToScene(int sceneIndex)
     {
@@ -618,6 +807,7 @@ public class GameManager : MonoBehaviour
     {
         musicPlaybackLocked = true;
         ResolveMusicSourcesIfNeeded();
+        StopProtectorMusicTransitionRoutine();
 
         StopMusicSource(mainMusicSource);
         StopMusicSource(backgroundMusicSource);
@@ -627,6 +817,28 @@ public class GameManager : MonoBehaviour
     {
         if (source == null) return;
         if (source.isPlaying) source.Stop();
+    }
+
+    private static void PrepareMusicSource(AudioSource source, bool loop, float volume)
+    {
+        if (source == null) return;
+
+        source.playOnAwake = false;
+        source.loop = loop;
+        source.mute = false;
+        source.pitch = 1f;
+        source.volume = Mathf.Clamp01(volume);
+    }
+
+    private AudioSource CreateRuntimeMusicSource(string objectName)
+    {
+        GameObject sourceObject = new GameObject(objectName);
+        sourceObject.transform.SetParent(transform, false);
+
+        AudioSource source = sourceObject.AddComponent<AudioSource>();
+        source.playOnAwake = false;
+        source.loop = true;
+        return source;
     }
 
     private AudioSource ResolveFallSfxSource()
@@ -723,12 +935,64 @@ public class GameManager : MonoBehaviour
         }
 
         source.playOnAwake = false;
-        source.loop = true;
+        source.mute = false;
+        source.pitch = 1f;
 
         if (!source.isPlaying && source.clip != null)
         {
             source.Play();
         }
+    }
+
+    private void StopProtectorMusicTransitionRoutine()
+    {
+        if (protectorMusicTransitionRoutine == null) return;
+
+        StopCoroutine(protectorMusicTransitionRoutine);
+        protectorMusicTransitionRoutine = null;
+    }
+
+    private IEnumerator FadeMusicSourceRoutine(
+        AudioSource source,
+        float targetVolume,
+        float duration,
+        bool stopWhenFinished)
+    {
+        if (source == null)
+        {
+            protectorMusicTransitionRoutine = null;
+            yield break;
+        }
+
+        float safeTargetVolume = Mathf.Clamp01(targetVolume);
+        float safeDuration = Mathf.Max(0.0001f, duration);
+        float startVolume = Mathf.Max(0f, source.volume);
+        float timer = 0f;
+
+        while (timer < safeDuration)
+        {
+            if (source == null)
+            {
+                protectorMusicTransitionRoutine = null;
+                yield break;
+            }
+
+            timer += Time.unscaledDeltaTime;
+            float t = Mathf.Clamp01(timer / safeDuration);
+            source.volume = Mathf.Lerp(startVolume, safeTargetVolume, t);
+            yield return null;
+        }
+
+        if (source != null)
+        {
+            source.volume = safeTargetVolume;
+            if (stopWhenFinished && safeTargetVolume <= 0.001f)
+            {
+                source.Stop();
+            }
+        }
+
+        protectorMusicTransitionRoutine = null;
     }
 
     private IEnumerator FadeConfiguredMusicSources(float targetMultiplier, float duration, bool stopWhenFinished)
@@ -782,5 +1046,102 @@ public class GameManager : MonoBehaviour
     {
         if (Mathf.Approximately(Time.timeScale, 0f)) Time.timeScale = 1f;
         if (Instance == this) Instance = null;
+    }
+
+    private void InitializeLivesForCurrentScene()
+    {
+        string sceneName = SceneManager.GetActiveScene().name;
+        int startLives = ResolveStartLivesForScene(sceneName);
+
+        currentLives = Mathf.Max(0, startLives);
+        PersistentPlayerLives = currentLives;
+        CurrentSceneCheckpointLives = currentLives;
+        CurrentSceneCheckpointName = sceneName;
+        persistentLivesInitialized = true;
+    }
+
+    private void SetCurrentLives(int lives, bool refreshLabel = true)
+    {
+        currentLives = Mathf.Max(0, lives);
+        PersistentPlayerLives = currentLives;
+
+        if (refreshLabel)
+        {
+            RefreshHpLabel();
+        }
+    }
+
+    private void PreparePersistentLivesForRestart()
+    {
+        string sceneName = SceneManager.GetActiveScene().name;
+        int restartLives = ResolveRestartLivesForScene(sceneName);
+
+        PersistentPlayerLives = restartLives;
+        CurrentSceneCheckpointLives = restartLives;
+        CurrentSceneCheckpointName = sceneName;
+    }
+
+    public static void ResetPersistentLivesSession()
+    {
+        PersistentPlayerLives = 0;
+        CurrentSceneCheckpointLives = 0;
+        CurrentSceneCheckpointName = string.Empty;
+        persistentLivesInitialized = false;
+    }
+
+    private int ResolveStartLivesForScene(string sceneName)
+    {
+        if (SceneNameEquals(sceneName, caveSceneName))
+        {
+            return Mathf.Max(1, caveStartLives);
+        }
+
+        int baseLives = persistentLivesInitialized
+            ? Mathf.Max(1, PersistentPlayerLives)
+            : Mathf.Max(1, maxLives);
+
+        if (SceneNameEquals(sceneName, protectorSceneName))
+        {
+            return Mathf.Max(baseLives, Mathf.Max(1, protectorMinimumEntryLives));
+        }
+
+        if (SceneNameEquals(sceneName, postProtectorSceneName))
+        {
+            return Mathf.Max(baseLives, Mathf.Max(1, postProtectorMinimumEntryLives));
+        }
+
+        return baseLives;
+    }
+
+    private int ResolveRestartLivesForScene(string sceneName)
+    {
+        if (SceneNameEquals(sceneName, caveSceneName))
+        {
+            return Mathf.Max(1, caveStartLives);
+        }
+
+        if (SceneNameEquals(CurrentSceneCheckpointName, sceneName))
+        {
+            if (SceneNameEquals(sceneName, protectorSceneName))
+            {
+                return Mathf.Max(CurrentSceneCheckpointLives, Mathf.Max(1, protectorMinimumEntryLives));
+            }
+
+            if (SceneNameEquals(sceneName, postProtectorSceneName))
+            {
+                return Mathf.Max(CurrentSceneCheckpointLives, Mathf.Max(1, postProtectorMinimumEntryLives));
+            }
+
+            return Mathf.Max(1, CurrentSceneCheckpointLives);
+        }
+
+        return ResolveStartLivesForScene(sceneName);
+    }
+
+    private static bool SceneNameEquals(string left, string right)
+    {
+        return !string.IsNullOrWhiteSpace(left) &&
+               !string.IsNullOrWhiteSpace(right) &&
+               string.Equals(left, right, System.StringComparison.OrdinalIgnoreCase);
     }
 }

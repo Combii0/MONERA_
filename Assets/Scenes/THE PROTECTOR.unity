@@ -927,6 +927,7 @@ GameObject:
   m_Component:
   - component: {fileID: 741204073}
   - component: {fileID: 741204072}
+  - component: {fileID: 741204074}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -969,7 +970,6 @@ MonoBehaviour:
   sceneChanger: {fileID: 1353255126}
   deathFadeDuration: 0.8
   deathBackgroundColor: {r: 0, g: 0, b: 0, a: 1}
-  musicFadeDuration: 1
   pixelFadeSteps: 12
   firstLevelSceneIndex: 1
   instantDeathY: -12
@@ -1006,6 +1006,14 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!81 &741204074
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 741204071}
+  m_Enabled: 1
 --- !u!1 &774344389
 GameObject:
   m_ObjectHideFlags: 0
@@ -2831,7 +2839,6 @@ GameObject:
   - component: {fileID: 1035050618}
   - component: {fileID: 1035050613}
   - component: {fileID: 1035050616}
-  - component: {fileID: 1035050619}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -2949,14 +2956,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!81 &1035050619
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1035050612}
-  m_Enabled: 1
 --- !u!1 &1043476311
 GameObject:
   m_ObjectHideFlags: 0
@@ -3763,6 +3762,7 @@ GameObject:
   - component: {fileID: 1402061714}
   - component: {fileID: 1402061713}
   - component: {fileID: 1402061712}
+  - component: {fileID: 1402061719}
   m_Layer: 0
   m_Name: The Protector
   m_TagString: Untagged
@@ -3994,6 +3994,8 @@ MonoBehaviour:
   leftSpawnPoint: {x: -3.5, y: 1.5}
   summonSpawnZ: 0
   summonFadeInDuration: 0.35
+  summonWhiteGlobesSfx: {fileID: 8300000, guid: 320e34f3e73d64e03b0c466f6d25b036, type: 3}
+  summonWhiteGlobesSfxVolume: 0.584
   minimumRuntimeMoveSpeed: 6
   moveTimeoutPaddingSeconds: 0.75
 --- !u!114 &1402061716
@@ -4061,6 +4063,9 @@ MonoBehaviour:
   moveTimeoutPaddingSeconds: 0.75
   sweepAttackSprite: {fileID: -3021958138824128146, guid: 7517adc8717d94755af07be4738eec62, type: 3}
   attackSpriteRenderer: {fileID: 1402061710}
+  chargeSfx: {fileID: 8300000, guid: 43d03d555ad8e4769b5a5a0bbae93468, type: 3}
+  chargeSfxVolume: 1
+  chargeSfxSource: {fileID: 0}
   playerTarget: {fileID: 1007963485}
   cianBacteriaCircle: {fileID: 1568354821}
 --- !u!114 &1402061718
@@ -4083,11 +4088,31 @@ MonoBehaviour:
   healthBarPrefab: {fileID: 7167031276324826369, guid: 81abe527312192648a1d0ce340576823, type: 3}
   healthBarYOffset: 0.5
   sfxSource: {fileID: 0}
-  hitSfx: {fileID: 8300000, guid: ce8080f4fdb2843bda76f6b51684ca56, type: 3}
+  hitSfx: {fileID: 0}
   hitSfxVolume: 0.9
   damageFlashColor: {r: 1, g: 0.16, b: 0.16, a: 1}
   damageFlashStrength: 0.9
   damageFlashDuration: 0.12
+  finalHitSfx: {fileID: 8300000, guid: d27860a11c55f49ecbd1b3954733b8e9, type: 3}
+  finalHitSfxVolume: 1
+  appearanceSfx: {fileID: 8300000, guid: 6269d323b873b4a69b81196503518527, type: 3}
+  appearanceSfxVolume: 1
+  appearanceSfxStartTime: 0.4
+  bossMainThemeClip: {fileID: 8300000, guid: 76d6b3610d8ba4142a1a2d490b4c436d, type: 3}
+  bossMainThemeVolume: 1
+  backgroundMusicClip: {fileID: 8300000, guid: 52f4af33e44104ae68568f2004a83664, type: 3}
+  backgroundMusicVolume: 1
+  entryBackgroundFadeOutDuration: 0.12
+  lethalHitBackgroundFadeInDuration: 0.35
+  entryDialogueText: A killer does not deserve to live...
+  entryDialogueRevealCharsPerSecond: 14
+  entryDialogueOffset: {x: 0, y: 1.75, z: 0}
+  entryDialogueWidth: 8
+  entryDialogueHeight: 2.5
+  entryDialogueFontSize: 5
+  entryDialogueSortingOrderBoost: 120
+  entryDialogueContinueLabel: Press E to start.
+  entryDialogueContinueOffsetFromPlayer: {x: 0, y: -1.15, z: 0}
   contactKnockbackForce: 8.5
   contactKnockbackUpward: 2.4
   contactFlashDuration: 0.5
@@ -4119,6 +4144,66 @@ MonoBehaviour:
   tpAttackChancePerInterval: 0.3
   alternateAttackAndMovement: 1
   isInvulnerable: 0
+--- !u!114 &1402061719
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1402061708}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be9fa537b65824b2f92d92bba51ec1b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  preDeathDialogueLines:
+  - portrait: {fileID: -5118401254094740915, guid: 9218ac208722d4fcd98dccbb34720a7b, type: 3}
+    interactSfx: {fileID: 0}
+    interactSfxVolume: 0
+    text: You...
+  - portrait: {fileID: -5118401254094740915, guid: 9218ac208722d4fcd98dccbb34720a7b, type: 3}
+    interactSfx: {fileID: 0}
+    interactSfxVolume: 0
+    text: You were just like THE ARCHEA said...
+  - portrait: {fileID: 6455895696698327629, guid: 9218ac208722d4fcd98dccbb34720a7b, type: 3}
+    interactSfx: {fileID: 0}
+    interactSfxVolume: 0
+    text: I was meant to protect the whole world.
+  - portrait: {fileID: -3021958138824128146, guid: 7517adc8717d94755af07be4738eec62, type: 3}
+    interactSfx: {fileID: 0}
+    interactSfxVolume: 0
+    text: You and your specie have been killing everyone since you arrived...
+  - portrait: {fileID: -4747953175934997105, guid: e730f1eaf609e4e4cbc321d8944c97b0, type: 3}
+    interactSfx: {fileID: 0}
+    interactSfxVolume: 0
+    text: I understand THE ONE WHO RULES now...
+  - portrait: {fileID: -4747953175934997105, guid: e730f1eaf609e4e4cbc321d8944c97b0, type: 3}
+    interactSfx: {fileID: 0}
+    interactSfxVolume: 0
+    text: Jellies...
+  - portrait: {fileID: 3206819849501703097, guid: e730f1eaf609e4e4cbc321d8944c97b0, type: 3}
+    interactSfx: {fileID: 0}
+    interactSfxVolume: 0
+    text: Jellies are the real danger for Monera...
+  - portrait: {fileID: 3206819849501703097, guid: e730f1eaf609e4e4cbc321d8944c97b0, type: 3}
+    interactSfx: {fileID: 0}
+    interactSfxVolume: 0
+    text: YOU are the real DANGER for MONERA...
+  - portrait: {fileID: 827771853864145743, guid: e730f1eaf609e4e4cbc321d8944c97b0, type: 3}
+    interactSfx: {fileID: 0}
+    interactSfxVolume: 0
+    text: You are despicable...
+  protectorTypeSfx: {fileID: 8300000, guid: 353ce1c21094e45e9bcdf8e707a1b8b9, type: 3}
+  protectorTypeSfxVolume: 0.65
+  postDeathAudioClip: {fileID: 8300000, guid: d27860a11c55f49ecbd1b3954733b8e9, type: 3}
+  postDeathAudioStartTime: 0.3
+  useCustomPostDeathFlow: 1
+  rewardMessage: Congratullations! For murdering, you are more powerfull now!(+1
+    more life)
+  waitAfterConfirmSeconds: 2
+  extraLivesReward: 1
+  rewardFontSize: 52
+  rewardBoxSize: {x: 1120, y: 260}
 --- !u!1 &1540249949
 GameObject:
   m_ObjectHideFlags: 0

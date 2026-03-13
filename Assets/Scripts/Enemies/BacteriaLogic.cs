@@ -61,6 +61,7 @@ public class BacteriaLogic : MonoBehaviour
         }
 
         EnsureCianCircleReference();
+        SyncAggroRadiusWithDetectionRadius();
         SetCianCircleVisible(isIdle);
     }
 
@@ -271,6 +272,14 @@ public class BacteriaLogic : MonoBehaviour
         if (child != null) cianBacteriaCircle = child.gameObject;
     }
 
+    private void SyncAggroRadiusWithDetectionRadius()
+    {
+        if (!useDetectionRadius) return;
+
+        float idleDetectionRadius = Mathf.Max(0f, detectionRadiusInTiles) * Mathf.Max(0.01f, tileSizeWorldUnits);
+        detectionRadius = idleDetectionRadius;
+    }
+
     private void SetCianCircleVisible(bool visible)
     {
         if (cianBacteriaCircle != null) cianBacteriaCircle.SetActive(visible);
@@ -332,4 +341,11 @@ public class BacteriaLogic : MonoBehaviour
             Gizmos.DrawWireSphere(transform.position, detectionRadius);
         }
     }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        SyncAggroRadiusWithDetectionRadius();
+    }
+#endif
 }

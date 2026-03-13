@@ -2,11 +2,17 @@ using System;
 using System.Collections;
 using System.IO;
 using System.Reflection;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.Playables;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
+
+#if ENABLE_INPUT_SYSTEM
+using UnityEngine.InputSystem;
+#endif
 
 [RequireComponent(typeof(Collider2D))]
 [RequireComponent(typeof(Rigidbody2D))]
@@ -38,6 +44,32 @@ public class Protector : MonoBehaviour
     [SerializeField] private Color damageFlashColor = new Color(1f, 0.16f, 0.16f, 1f);
     [SerializeField, Range(0f, 1f)] private float damageFlashStrength = 0.9f;
     [SerializeField] private float damageFlashDuration = 0.12f;
+
+    [Header("Boss Audio")]
+    [SerializeField] private AudioClip finalHitSfx;
+    [SerializeField, Range(0f, 1f)] private float finalHitSfxVolume = 1f;
+    [SerializeField] private AudioClip appearanceSfx;
+    [SerializeField, Range(0f, 1f)] private float appearanceSfxVolume = 1f;
+    [SerializeField, Min(0f)] private float appearanceSfxStartTime = 0.4f;
+    [SerializeField] private AudioClip bossMainThemeClip;
+    [SerializeField, Range(0f, 1f)] private float bossMainThemeVolume = 1f;
+    [FormerlySerializedAs("bossBackgroundLoopClip")]
+    [SerializeField] private AudioClip backgroundMusicClip;
+    [FormerlySerializedAs("bossBackgroundLoopVolume")]
+    [SerializeField, Range(0f, 1f)] private float backgroundMusicVolume = 1f;
+    [SerializeField, Min(0f)] private float entryBackgroundFadeOutDuration = 0.12f;
+    [SerializeField, Min(0f)] private float lethalHitBackgroundFadeInDuration = 0.35f;
+
+    [Header("Entry Dialogue")]
+    [SerializeField, TextArea(2, 6)] private string entryDialogueText;
+    [SerializeField, Min(1f)] private float entryDialogueRevealCharsPerSecond = 14f;
+    [SerializeField] private Vector3 entryDialogueOffset = new Vector3(0f, 1.75f, 0f);
+    [SerializeField, Min(1f)] private float entryDialogueWidth = 8f;
+    [SerializeField, Min(0.5f)] private float entryDialogueHeight = 2.5f;
+    [SerializeField, Min(0.25f)] private float entryDialogueFontSize = 1.15f;
+    [SerializeField] private int entryDialogueSortingOrderBoost = 120;
+    [SerializeField] private string entryDialogueContinueLabel = "Press E";
+    [SerializeField] private Vector3 entryDialogueContinueOffsetFromPlayer = new Vector3(0f, -1.15f, 0f);
 
     [Header("Contact Damage To Player")]
     [SerializeField] private float contactKnockbackForce = 8.5f;
@@ -102,6 +134,7 @@ public class Protector : MonoBehaviour
     private Color[] damageFlashBaseColors;
     private Animator animator;
     private Color baseSpriteColor;
+    private ProtectorDialogue protectorDialogue;
     private ProtectorMoving protectorMoving;
     private ProtectorAttack protectorAttack;
     private ProtectorSummoner protectorSummoner;
@@ -132,6 +165,24 @@ public class Protector : MonoBehaviour
     private Image deathOverlayImage;
     private CamaraMovement disabledDeathCameraMovement;
     private bool keepDeathCameraLockedDuringSceneTransition;
+    private bool backgroundMusicStarted;
+    private bool mainThemeStarted;
+    private bool appearanceSfxPlayed;
+    private AudioSource timedSfxSource;
+    private GameObject entryDialogueRoot;
+    private TextMeshPro entryDialogueTextMesh;
+    private TextMeshPro entryDialogueContinueMesh;
+    private bool entryDialogueSequenceStarted;
+    private bool entryDialogueCompleted;
+    private float nextEntryDialogueTypeSfxTime;
+    private PlayerMovement entryDialogueFrozenPlayer;
+    private PlayerShooting entryDialogueFrozenShooting;
+    private PlayerAnimation entryDialogueFrozenAnimation;
+    private bool entryDialoguePlayerMovementWasEnabled;
+    private bool entryDialoguePlayerShootingWasEnabled;
+    private bool entryDialoguePlayerAnimationWasEnabled;
+    private bool entryDialogueGameplayFrozen;
+    private float entryDialoguePreviousTimeScale = 1f;
 
     private void Awake()
     {
@@ -139,6 +190,7 @@ public class Protector : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
         CacheDamageFlashRenderers();
         animator = GetComponent<Animator>();
+        protectorDialogue = GetComponent<ProtectorDialogue>();
         protectorMoving = GetComponent<ProtectorMoving>();
         protectorAttack = GetComponent<ProtectorAttack>();
         protectorSummoner = GetComponent<ProtectorSummoner>();
@@ -169,6 +221,7 @@ public class Protector : MonoBehaviour
     {
         SpawnHealthBar();
         if (playMovingStateOnStart) PlayMovingState();
+        StartBackgroundMusicIfNeeded();
 
         nextMovementChangeTime = float.PositiveInfinity;
         if (protectorMoving != null)
@@ -176,12 +229,14 @@ public class Protector : MonoBehaviour
             protectorMoving.OnEntrySequenceFinished += HandleEntrySequenceFinished;
             if (protectorMoving.IsEntrySequenceFinished)
             {
-                ActivateRandomAttackScheduler();
+                TryPlayAppearanceSfxIfSpriteIsWhite();
+                HandleEntrySequenceFinished();
             }
         }
         else
         {
-            ActivateRandomAttackScheduler();
+            TryPlayAppearanceSfxIfSpriteIsWhite();
+            HandleEntrySequenceFinished();
         }
     }
 
@@ -195,6 +250,7 @@ public class Protector : MonoBehaviour
     private void LateUpdate()
     {
         UpdateDamageFlash();
+        TryPlayAppearanceSfxOnWhiteFrame();
         KeepDeathPositionLocked();
     }
 
@@ -216,8 +272,9 @@ public class Protector : MonoBehaviour
     {
         if (IsDead || amount <= 0 || isInvulnerable) return;
 
+        bool isLethalHit = currentHealth - amount <= 0;
         currentHealth = Mathf.Max(0, currentHealth - amount);
-        TriggerDamageFeedback();
+        TriggerDamageFeedback(isLethalHit);
         UpdateHealthBarVisuals();
         OnDamaged?.Invoke();
 
@@ -227,6 +284,17 @@ public class Protector : MonoBehaviour
     private void TryReceiveTagDamage(GameObject damageSource)
     {
         if (IsDead || damageSource == null) return;
+
+        PlayerProjectile projectile = damageSource.GetComponentInParent<PlayerProjectile>();
+        if (projectile != null)
+        {
+            if (!projectile.TryConsumeImpactDamage(out int projectileDamage)) return;
+
+            TakeDamage(projectileDamage);
+            nextAllowedHitTime = Time.time + Mathf.Max(0.01f, hitCooldown);
+            return;
+        }
+
         if (Time.time < nextAllowedHitTime) return;
 
         for (int i = 0; i < damageTags.Length; i++)
@@ -257,10 +325,18 @@ public class Protector : MonoBehaviour
         }
     }
 
-    private void TriggerDamageFeedback()
+    private void TriggerDamageFeedback(bool isLethalHit)
     {
         damageFlashTimer = Mathf.Max(0.02f, damageFlashDuration);
-        if (sfxSource != null && hitSfx != null) sfxSource.PlayOneShot(hitSfx, hitSfxVolume);
+
+        if (isLethalHit && GameManager.Instance != null)
+        {
+            GameManager.Instance.TransitionProtectorDeathMusic(lethalHitBackgroundFadeInDuration);
+        }
+
+        AudioClip clipToPlay = isLethalHit && finalHitSfx != null ? finalHitSfx : hitSfx;
+        float volumeToPlay = isLethalHit && finalHitSfx != null ? finalHitSfxVolume : hitSfxVolume;
+        PlayBossSfx(clipToPlay, volumeToPlay);
     }
 
     private void UpdateDamageFlash()
@@ -430,6 +506,16 @@ public class Protector : MonoBehaviour
             yield return FocusDeathCameraOnProtector();
         }
 
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.StopMainMusicKeepBackground();
+        }
+
+        if (protectorDialogue != null)
+        {
+            yield return protectorDialogue.PlayPreDeathDialogue();
+        }
+
         float deathDuration = PlayDeathAnimationAndResolveDuration();
         float elapsed = 0f;
         while (elapsed < deathDuration)
@@ -439,7 +525,19 @@ public class Protector : MonoBehaviour
         }
 
         StopDeathPlayable();
-        BeginPostDeathTransitionAndDestroy();
+        if (protectorDialogue != null)
+        {
+            protectorDialogue.PlayPostDeathAudio();
+        }
+
+        if (protectorDialogue != null && protectorDialogue.HasCustomPostDeathFlow)
+        {
+            yield return BeginPostDeathTransitionWithDialogue();
+        }
+        else
+        {
+            BeginPostDeathTransitionAndDestroy();
+        }
     }
 
     private IEnumerator FocusDeathCameraOnProtector()
@@ -531,6 +629,37 @@ public class Protector : MonoBehaviour
             tunnelIntroFadeInSteps,
             disabledDeathCameraMovement);
 
+        Destroy(gameObject);
+    }
+
+    private IEnumerator BeginPostDeathTransitionWithDialogue()
+    {
+        EnsureDeathOverlay();
+
+        if (deathOverlayCanvas == null || deathOverlayImage == null)
+        {
+            RestoreDeathCameraMovement();
+            LoadVictorySceneAfterDefeat();
+            Destroy(gameObject);
+            yield break;
+        }
+
+        float finalFadeDuration = Mathf.Max(0.05f, deathFinalFadeOutDuration);
+        yield return FadeDeathOverlayToAlpha(1f, finalFadeDuration);
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.StopConfiguredMusicImmediate();
+        }
+
+        if (protectorDialogue != null)
+        {
+            yield return protectorDialogue.ShowRewardMessageAndDelay();
+        }
+
+        Time.timeScale = 1f;
+        RestoreDeathCameraMovement();
+        LoadVictorySceneAfterDefeat();
         Destroy(gameObject);
     }
 
@@ -764,7 +893,485 @@ public class Protector : MonoBehaviour
 
     private void HandleEntrySequenceFinished()
     {
+        if (ShouldShowEntryDialogue())
+        {
+            if (!entryDialogueSequenceStarted)
+            {
+                StartCoroutine(HandleEntryDialogueSequence());
+            }
+
+            return;
+        }
+
+        StartCombatAfterEntryIfNeeded();
+    }
+
+    private bool ShouldShowEntryDialogue()
+    {
+        return !entryDialogueCompleted && !string.IsNullOrWhiteSpace(entryDialogueText);
+    }
+
+    private IEnumerator HandleEntryDialogueSequence()
+    {
+        if (entryDialogueSequenceStarted) yield break;
+        entryDialogueSequenceStarted = true;
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.StopConfiguredMusicImmediate();
+        }
+
+        yield return ShowEntryDialogueAboveProtector();
+
+        entryDialogueCompleted = true;
+        entryDialogueSequenceStarted = false;
+        StartCombatAfterEntryIfNeeded();
+    }
+
+    private void StartCombatAfterEntryIfNeeded()
+    {
+        if (!mainThemeStarted)
+        {
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.StartProtectorCombatMusic(
+                    bossMainThemeClip,
+                    bossMainThemeVolume,
+                    entryBackgroundFadeOutDuration);
+                mainThemeStarted = bossMainThemeClip != null;
+            }
+            else
+            {
+                StartMainThemeIfNeeded();
+            }
+        }
+
         ActivateRandomAttackScheduler();
+    }
+
+    private IEnumerator ShowEntryDialogueAboveProtector()
+    {
+        FreezeEntryDialogueGameplay();
+        EnsureEntryDialogueVisual();
+        ApplyEntryDialogueStyle();
+
+        if (entryDialogueRoot == null || entryDialogueTextMesh == null)
+        {
+            RestoreEntryDialogueGameplay();
+            yield break;
+        }
+
+        entryDialogueRoot.transform.localPosition = entryDialogueOffset;
+        entryDialogueRoot.SetActive(true);
+
+        if (entryDialogueContinueMesh != null)
+        {
+            entryDialogueContinueMesh.text = string.IsNullOrWhiteSpace(entryDialogueContinueLabel)
+                ? "Press E"
+                : entryDialogueContinueLabel;
+            entryDialogueContinueMesh.maxVisibleCharacters = int.MaxValue;
+            SetEntryDialogueContinueVisible(false);
+            UpdateEntryDialogueContinuePosition();
+        }
+
+        entryDialogueTextMesh.text = entryDialogueText;
+        entryDialogueTextMesh.ForceMeshUpdate();
+        entryDialogueTextMesh.maxVisibleCharacters = 0;
+
+        int totalChars = entryDialogueTextMesh.textInfo.characterCount;
+        float visible = 0f;
+        float revealSpeed = Mathf.Max(1f, entryDialogueRevealCharsPerSecond);
+
+        yield return null;
+
+        while (entryDialogueTextMesh.maxVisibleCharacters < totalChars)
+        {
+            if (WasEntryDialogueInteractPressedThisFrame())
+            {
+                entryDialogueTextMesh.maxVisibleCharacters = totalChars;
+                break;
+            }
+
+            visible += revealSpeed * Time.unscaledDeltaTime;
+            int nextVisible = Mathf.Min(totalChars, Mathf.FloorToInt(visible));
+
+            while (entryDialogueTextMesh.maxVisibleCharacters < nextVisible)
+            {
+                entryDialogueTextMesh.maxVisibleCharacters++;
+                PlayEntryDialogueTypeSfx();
+            }
+
+            yield return null;
+        }
+
+        if (entryDialogueContinueMesh != null)
+        {
+            SetEntryDialogueContinueVisible(true);
+            UpdateEntryDialogueContinuePosition();
+        }
+
+        yield return null;
+
+        while (!WasEntryDialogueInteractPressedThisFrame())
+        {
+            UpdateEntryDialogueContinuePosition();
+            UpdateEntryDialoguePromptPulse();
+            yield return null;
+        }
+
+        if (entryDialogueRoot != null)
+        {
+            entryDialogueRoot.SetActive(false);
+        }
+
+        RestoreEntryDialogueGameplay();
+    }
+
+    private void StartBackgroundMusicIfNeeded()
+    {
+        if (backgroundMusicStarted) return;
+        backgroundMusicStarted = true;
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.PlayEncounterBackgroundLoop(backgroundMusicClip, backgroundMusicVolume);
+        }
+    }
+
+    private void StartMainThemeIfNeeded()
+    {
+        if (mainThemeStarted) return;
+        mainThemeStarted = true;
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.PlayEncounterMainTheme(bossMainThemeClip, bossMainThemeVolume);
+        }
+    }
+
+    private void FreezeEntryDialogueGameplay()
+    {
+        if (entryDialogueGameplayFrozen) return;
+
+        entryDialoguePreviousTimeScale = Time.timeScale;
+        entryDialogueGameplayFrozen = true;
+        Time.timeScale = 0f;
+
+        if (body != null)
+        {
+            body.linearVelocity = Vector2.zero;
+            body.angularVelocity = 0f;
+        }
+
+        entryDialogueFrozenPlayer = FindFirstObjectByType<PlayerMovement>();
+        if (entryDialogueFrozenPlayer != null)
+        {
+            Rigidbody2D playerBody = entryDialogueFrozenPlayer.GetComponent<Rigidbody2D>();
+            if (playerBody != null)
+            {
+                playerBody.linearVelocity = Vector2.zero;
+                playerBody.angularVelocity = 0f;
+            }
+
+            entryDialoguePlayerMovementWasEnabled = entryDialogueFrozenPlayer.enabled;
+            if (entryDialoguePlayerMovementWasEnabled) entryDialogueFrozenPlayer.enabled = false;
+
+            entryDialogueFrozenShooting = entryDialogueFrozenPlayer.GetComponent<PlayerShooting>();
+            entryDialoguePlayerShootingWasEnabled =
+                entryDialogueFrozenShooting != null && entryDialogueFrozenShooting.enabled;
+            if (entryDialoguePlayerShootingWasEnabled) entryDialogueFrozenShooting.enabled = false;
+
+            entryDialogueFrozenAnimation = entryDialogueFrozenPlayer.GetComponent<PlayerAnimation>();
+            entryDialoguePlayerAnimationWasEnabled =
+                entryDialogueFrozenAnimation != null && entryDialogueFrozenAnimation.enabled;
+            if (entryDialoguePlayerAnimationWasEnabled) entryDialogueFrozenAnimation.enabled = false;
+        }
+    }
+
+    private void RestoreEntryDialogueGameplay()
+    {
+        if (!entryDialogueGameplayFrozen) return;
+
+        if (entryDialogueFrozenPlayer != null)
+        {
+            entryDialogueFrozenPlayer.enabled = entryDialoguePlayerMovementWasEnabled;
+        }
+
+        if (entryDialogueFrozenShooting != null)
+        {
+            entryDialogueFrozenShooting.enabled = entryDialoguePlayerShootingWasEnabled;
+        }
+
+        if (entryDialogueFrozenAnimation != null)
+        {
+            entryDialogueFrozenAnimation.enabled = entryDialoguePlayerAnimationWasEnabled;
+        }
+
+        entryDialogueFrozenPlayer = null;
+        entryDialogueFrozenShooting = null;
+        entryDialogueFrozenAnimation = null;
+        entryDialoguePlayerMovementWasEnabled = false;
+        entryDialoguePlayerShootingWasEnabled = false;
+        entryDialoguePlayerAnimationWasEnabled = false;
+
+        Time.timeScale = entryDialoguePreviousTimeScale;
+        entryDialogueGameplayFrozen = false;
+    }
+
+    private void EnsureEntryDialogueVisual()
+    {
+        if (entryDialogueRoot != null && entryDialogueTextMesh != null && entryDialogueContinueMesh != null) return;
+
+        if (entryDialogueRoot == null)
+        {
+            entryDialogueRoot = new GameObject("EntryDialogue");
+            entryDialogueRoot.transform.SetParent(transform, false);
+        }
+
+        if (entryDialogueTextMesh == null)
+        {
+            Transform existingMessage = entryDialogueRoot.transform.Find("Message");
+            if (existingMessage != null) entryDialogueTextMesh = existingMessage.GetComponent<TextMeshPro>();
+        }
+
+        if (entryDialogueTextMesh == null)
+        {
+            GameObject messageObject = new GameObject("Message");
+            messageObject.transform.SetParent(entryDialogueRoot.transform, false);
+            entryDialogueTextMesh = messageObject.AddComponent<TextMeshPro>();
+        }
+
+        if (entryDialogueContinueMesh == null)
+        {
+            Transform existingContinue = entryDialogueRoot.transform.Find("Continue");
+            if (existingContinue != null) entryDialogueContinueMesh = existingContinue.GetComponent<TextMeshPro>();
+        }
+
+        if (entryDialogueContinueMesh == null)
+        {
+            GameObject continueObject = new GameObject("Continue");
+            continueObject.transform.SetParent(entryDialogueRoot.transform, false);
+            entryDialogueContinueMesh = continueObject.AddComponent<TextMeshPro>();
+        }
+
+        ConfigureEntryDialogueTextMesh(entryDialogueTextMesh, isContinueHint: false);
+        ConfigureEntryDialogueTextMesh(entryDialogueContinueMesh, isContinueHint: true);
+
+        entryDialogueRoot.transform.localPosition = entryDialogueOffset;
+        entryDialogueRoot.SetActive(false);
+    }
+
+    private void ConfigureEntryDialogueTextMesh(TextMeshPro textMesh, bool isContinueHint)
+    {
+        if (textMesh == null) return;
+
+        textMesh.alignment = TextAlignmentOptions.Center;
+        textMesh.enableAutoSizing = false;
+        textMesh.fontSize = isContinueHint
+            ? Mathf.Max(0.2f, entryDialogueFontSize * 0.72f)
+            : Mathf.Max(0.25f, entryDialogueFontSize);
+        textMesh.color = isContinueHint
+            ? new Color(1f, 1f, 1f, 0f)
+            : Color.white;
+        textMesh.fontStyle = FontStyles.Normal;
+        textMesh.textWrappingMode = isContinueHint ? TextWrappingModes.NoWrap : TextWrappingModes.Normal;
+        textMesh.overflowMode = TextOverflowModes.Overflow;
+        textMesh.text = string.Empty;
+
+        RectTransform rect = textMesh.rectTransform;
+        rect.anchorMin = new Vector2(0.5f, 0.5f);
+        rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.sizeDelta = isContinueHint
+            ? new Vector2(entryDialogueWidth, Mathf.Max(0.5f, entryDialogueHeight * 0.28f))
+            : new Vector2(entryDialogueWidth, entryDialogueHeight);
+        rect.anchoredPosition = isContinueHint
+            ? new Vector2(0f, -Mathf.Max(0.45f, entryDialogueHeight * 0.62f))
+            : Vector2.zero;
+
+        MeshRenderer renderer = textMesh.GetComponent<MeshRenderer>();
+        if (renderer != null && spriteRenderer != null)
+        {
+            renderer.sortingLayerID = spriteRenderer.sortingLayerID;
+            renderer.sortingOrder = spriteRenderer.sortingOrder + entryDialogueSortingOrderBoost + (isContinueHint ? 1 : 0);
+        }
+    }
+
+    private void ApplyEntryDialogueStyle()
+    {
+        if (entryDialogueTextMesh == null || entryDialogueContinueMesh == null) return;
+
+        DialogueManager dialogueManager = DialogueManager.Instance;
+        if (dialogueManager != null)
+        {
+            if (dialogueManager.DialogueFontAsset != null)
+            {
+                entryDialogueTextMesh.font = dialogueManager.DialogueFontAsset;
+                entryDialogueContinueMesh.font = dialogueManager.DialogueFontAsset;
+            }
+
+            if (dialogueManager.DialogueFontMaterial != null)
+            {
+                entryDialogueTextMesh.fontSharedMaterial = dialogueManager.DialogueFontMaterial;
+                entryDialogueContinueMesh.fontSharedMaterial = dialogueManager.DialogueFontMaterial;
+            }
+
+            entryDialogueTextMesh.fontStyle = dialogueManager.DialogueFontStyle;
+            entryDialogueContinueMesh.fontStyle = dialogueManager.DialogueFontStyle;
+            entryDialogueTextMesh.color = dialogueManager.DialogueTextColor;
+        }
+
+        SetEntryDialogueContinueVisible(false);
+    }
+
+    private void SetEntryDialogueContinueVisible(bool visible)
+    {
+        if (entryDialogueContinueMesh == null) return;
+
+        Color color = entryDialogueContinueMesh.color;
+        color.a = visible ? 0.9f : 0f;
+        entryDialogueContinueMesh.color = color;
+    }
+
+    private void UpdateEntryDialoguePromptPulse()
+    {
+        if (entryDialogueContinueMesh == null) return;
+
+        Color color = entryDialogueContinueMesh.color;
+        color.a = 0.55f + (Mathf.Sin(Time.unscaledTime * 6f) * 0.25f + 0.25f);
+        entryDialogueContinueMesh.color = color;
+    }
+
+    private void UpdateEntryDialogueContinuePosition()
+    {
+        if (entryDialogueContinueMesh == null) return;
+
+        if (entryDialogueFrozenPlayer == null)
+        {
+            entryDialogueContinueMesh.rectTransform.anchoredPosition =
+                new Vector2(0f, -Mathf.Max(0.45f, entryDialogueHeight * 0.62f));
+            return;
+        }
+
+        entryDialogueContinueMesh.transform.position =
+            entryDialogueFrozenPlayer.transform.position + entryDialogueContinueOffsetFromPlayer;
+    }
+
+    private void PlayEntryDialogueTypeSfx()
+    {
+        AudioClip clip = DialogueManager.Instance != null
+            ? DialogueManager.Instance.DefaultTypeSfx
+            : null;
+        if (clip == null) return;
+        if (Time.unscaledTime < nextEntryDialogueTypeSfxTime) return;
+
+        nextEntryDialogueTypeSfxTime = Time.unscaledTime + 0.02f;
+
+        float volume = DialogueManager.Instance != null
+            ? Mathf.Clamp01(DialogueManager.Instance.DefaultTypeSfxVolume)
+            : 0.65f;
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.PlayUiSfx(clip, volume);
+        }
+    }
+
+    private static bool WasEntryDialogueInteractPressedThisFrame()
+    {
+        bool pressed = false;
+
+#if ENABLE_INPUT_SYSTEM
+        if (Keyboard.current != null)
+        {
+            pressed = Keyboard.current.eKey.wasPressedThisFrame;
+        }
+#endif
+
+#if ENABLE_LEGACY_INPUT_MANAGER
+        if (!pressed)
+        {
+            pressed = Input.GetKeyDown(KeyCode.E);
+        }
+#endif
+
+        return pressed;
+    }
+
+    private void TryPlayAppearanceSfxOnWhiteFrame()
+    {
+        if (appearanceSfxPlayed || IsDead) return;
+        if (protectorMoving == null || protectorMoving.IsEntrySequenceFinished) return;
+        if (!protectorMoving.IsEntryStateActive) return;
+
+        TryPlayAppearanceSfxIfSpriteIsWhite();
+    }
+
+    private void TryPlayAppearanceSfxIfSpriteIsWhite()
+    {
+        if (appearanceSfxPlayed) return;
+        if (spriteRenderer == null) return;
+
+        Color currentColor = spriteRenderer.color;
+        const float WhiteThreshold = 0.999f;
+        bool isFullyWhite =
+            currentColor.r >= WhiteThreshold &&
+            currentColor.g >= WhiteThreshold &&
+            currentColor.b >= WhiteThreshold &&
+            currentColor.a >= WhiteThreshold;
+
+        if (!isFullyWhite) return;
+
+        PlayBossSfxFromTime(appearanceSfx, appearanceSfxVolume, appearanceSfxStartTime);
+        appearanceSfxPlayed = true;
+    }
+
+    private void PlayBossSfx(AudioClip clip, float volume)
+    {
+        if (clip == null) return;
+
+        if (sfxSource == null)
+        {
+            sfxSource = GetComponent<AudioSource>();
+            if (sfxSource == null)
+            {
+                sfxSource = gameObject.AddComponent<AudioSource>();
+            }
+
+            sfxSource.playOnAwake = false;
+            sfxSource.loop = false;
+        }
+
+        sfxSource.PlayOneShot(clip, Mathf.Clamp01(volume));
+    }
+
+    private void PlayBossSfxFromTime(AudioClip clip, float volume, float startTimeSeconds)
+    {
+        if (clip == null) return;
+
+        AudioSource source = ResolveTimedSfxSource();
+        if (source == null) return;
+
+        float safeStartTime = Mathf.Clamp(startTimeSeconds, 0f, Mathf.Max(0f, clip.length - 0.01f));
+        source.Stop();
+        source.clip = clip;
+        source.time = safeStartTime;
+        source.volume = Mathf.Clamp01(volume);
+        source.loop = false;
+        source.Play();
+    }
+
+    private AudioSource ResolveTimedSfxSource()
+    {
+        if (timedSfxSource != null) return timedSfxSource;
+
+        GameObject sourceObject = new GameObject("ProtectorTimedSfxSource");
+        sourceObject.transform.SetParent(transform, false);
+
+        timedSfxSource = sourceObject.AddComponent<AudioSource>();
+        timedSfxSource.playOnAwake = false;
+        timedSfxSource.loop = false;
+        return timedSfxSource;
     }
 
     private void ActivateRandomAttackScheduler()
@@ -1107,8 +1714,21 @@ public class Protector : MonoBehaviour
         return true;
     }
 
+    private void CleanupEntryDialogueIfInterrupted()
+    {
+        entryDialogueSequenceStarted = false;
+        RestoreEntryDialogueGameplay();
+
+        if (entryDialogueRoot != null)
+        {
+            entryDialogueRoot.SetActive(false);
+        }
+    }
+
     private void OnDisable()
     {
+        CleanupEntryDialogueIfInterrupted();
+
         if (protectorMoving != null)
         {
             protectorMoving.OnEntrySequenceFinished -= HandleEntrySequenceFinished;
@@ -1123,7 +1743,10 @@ public class Protector : MonoBehaviour
 
     private void OnDestroy()
     {
+        CleanupEntryDialogueIfInterrupted();
+
         if (activeHealthBar != null) Destroy(activeHealthBar.gameObject);
+        if (entryDialogueRoot != null) Destroy(entryDialogueRoot);
         if (!keepDeathCameraLockedDuringSceneTransition)
         {
             RestoreDeathCameraMovement();

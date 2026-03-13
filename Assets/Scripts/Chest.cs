@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -15,6 +16,15 @@ public class Chest : MonoBehaviour
     [SerializeField] private int lifeReward = 1;
     [SerializeField, HideInInspector] private bool requirePlayerToPassAbove = true;
     [SerializeField, HideInInspector] private float minPlayerYFromChestCenter = -0.05f;
+
+    [Header("Visual Corazon")]
+    [SerializeField] private GameObject heartRewardPrefab;
+    [SerializeField] private Vector3 heartRewardSpawnOffset = new Vector3(0f, 0.4f, 0f);
+    [SerializeField] private Vector3 heartRewardRiseOffset = new Vector3(0f, 1.1f, 0f);
+    [SerializeField, Min(0f)] private float heartRewardFadeInDuration = 0.18f;
+    [SerializeField, Min(0f)] private float heartRewardHoldDuration = 0.16f;
+    [SerializeField, Min(0.01f)] private float heartRewardFadeOutDuration = 0.32f;
+    [SerializeField] private int heartRewardSortingOrderBoost = 3;
 
     private bool isOpened;
 
@@ -95,6 +105,11 @@ public class Chest : MonoBehaviour
             triggerCollider.enabled = false;
         }
 
+        if (heartRewardPrefab != null)
+        {
+            StartCoroutine(PlayHeartRewardVisual());
+        }
+
         GameManager gm = GameManager.Instance;
         if (gm == null)
         {
@@ -105,6 +120,95 @@ public class Chest : MonoBehaviour
         {
             gm.TryAddLife(Mathf.Max(1, lifeReward));
         }
+    }
+
+    private IEnumerator PlayHeartRewardVisual()
+    {
+        Vector3 startPosition = transform.position + heartRewardSpawnOffset;
+        GameObject heartObject = Instantiate(heartRewardPrefab, startPosition, Quaternion.identity);
+        if (heartObject == null) yield break;
+
+        SpriteRenderer[] renderers = heartObject.GetComponentsInChildren<SpriteRenderer>(true);
+        if (renderers == null || renderers.Length == 0)
+        {
+            Destroy(heartObject);
+            yield break;
+        }
+
+        Color[] baseColors = new Color[renderers.Length];
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            SpriteRenderer renderer = renderers[i];
+            if (renderer == null) continue;
+
+            baseColors[i] = renderer.color;
+            Color color = baseColors[i];
+            color.a = 0f;
+            renderer.color = color;
+
+            if (chestRenderer != null)
+            {
+                renderer.sortingLayerID = chestRenderer.sortingLayerID;
+                renderer.sortingOrder = chestRenderer.sortingOrder + heartRewardSortingOrderBoost + i;
+            }
+        }
+
+        float fadeInDuration = Mathf.Max(0f, heartRewardFadeInDuration);
+        float holdDuration = Mathf.Max(0f, heartRewardHoldDuration);
+        float fadeOutDuration = Mathf.Max(0.01f, heartRewardFadeOutDuration);
+        float totalDuration = fadeInDuration + holdDuration + fadeOutDuration;
+        Vector3 endPosition = startPosition + heartRewardRiseOffset;
+        float elapsed = 0f;
+
+        while (elapsed < totalDuration)
+        {
+            elapsed += Time.deltaTime;
+            float positionT = SmoothStep01(elapsed / Mathf.Max(0.0001f, totalDuration));
+            heartObject.transform.position = Vector3.Lerp(startPosition, endPosition, positionT);
+
+            float alpha = ResolveHeartRewardAlpha(elapsed, fadeInDuration, holdDuration, fadeOutDuration);
+            ApplyHeartRewardAlpha(renderers, baseColors, alpha);
+            yield return null;
+        }
+
+        ApplyHeartRewardAlpha(renderers, baseColors, 0f);
+        Destroy(heartObject);
+    }
+
+    private static void ApplyHeartRewardAlpha(SpriteRenderer[] renderers, Color[] baseColors, float alpha)
+    {
+        float safeAlpha = Mathf.Clamp01(alpha);
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            SpriteRenderer renderer = renderers[i];
+            if (renderer == null) continue;
+
+            Color color = i < baseColors.Length ? baseColors[i] : renderer.color;
+            color.a = safeAlpha;
+            renderer.color = color;
+        }
+    }
+
+    private static float ResolveHeartRewardAlpha(float elapsed, float fadeInDuration, float holdDuration, float fadeOutDuration)
+    {
+        if (fadeInDuration > 0f && elapsed <= fadeInDuration)
+        {
+            return elapsed / fadeInDuration;
+        }
+
+        if (elapsed <= fadeInDuration + holdDuration)
+        {
+            return 1f;
+        }
+
+        float fadeOutElapsed = elapsed - fadeInDuration - holdDuration;
+        return 1f - (fadeOutElapsed / Mathf.Max(0.0001f, fadeOutDuration));
+    }
+
+    private static float SmoothStep01(float t)
+    {
+        float clamped = Mathf.Clamp01(t);
+        return clamped * clamped * (3f - (2f * clamped));
     }
 
 #if UNITY_EDITOR

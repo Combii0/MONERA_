@@ -35,15 +35,13 @@ public class PlayerProjectile : MonoBehaviour
     {
         if (hasHit || other == null) return;
         
-        // Evitamos que el proyectil intente dañar al propio pingüino
+        // Evitamos que el proyectil intente dañar al propio pingüino, Rojitas, me encanta como agarras el script del pingüino, 10/10
         if (other.CompareTag("Player")) return;
 
         EnemyHealth enemy = other.GetComponentInParent<EnemyHealth>();
-        if (enemy != null)
+        Protector protector = other.GetComponentInParent<Protector>();
+        if (enemy != null || protector != null)
         {
-            hasHit = true;
-            enemy.TakeDamage(damage);
-            Destroy(gameObject);
             return;
         }
 
@@ -52,5 +50,16 @@ public class PlayerProjectile : MonoBehaviour
 
         hasHit = true;
         Destroy(gameObject);
+    }
+
+    public bool TryConsumeImpactDamage(out int impactDamage)
+    {
+        impactDamage = 0;
+        if (hasHit) return false;
+
+        hasHit = true;
+        impactDamage = Mathf.Max(1, damage);
+        Destroy(gameObject);
+        return true;
     }
 }
