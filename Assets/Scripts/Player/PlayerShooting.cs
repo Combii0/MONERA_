@@ -10,6 +10,9 @@ using UnityEditor;
 [RequireComponent(typeof(AudioSource))]
 public class PlayerShooting : MonoBehaviour
 {
+    private const float TapShootCooldown = 0.1f;
+    private const float HoldShootCooldown = 0.28f;
+
     [Header("Disparo")]
     [SerializeField] private bool enableShooting = true;
     [SerializeField] private GameObject projectilePrefab;
@@ -17,7 +20,6 @@ public class PlayerShooting : MonoBehaviour
     [SerializeField, HideInInspector] private float projectileSpeed = 14f;
     [SerializeField, HideInInspector] private int projectileDamage = 1;
     [SerializeField, HideInInspector] private float projectileLifetime = 2.5f;
-    [SerializeField] private float shootCooldown = 0.2f;
     [SerializeField, HideInInspector] private Vector2 shootSpawnOffset = new Vector2(0.55f, 0.05f);
     [SerializeField, HideInInspector] private float projectileColliderRadius = 0.12f;
     [SerializeField, HideInInspector] private float projectileScale = 1f;
@@ -38,6 +40,8 @@ public class PlayerShooting : MonoBehaviour
     private SpriteRenderer spriteRenderer;
     private AudioSource sfxSource;
     private Collider2D[] playerColliders;
+
+    public float ShootCooldown => GameSettings.AllowHoldFire ? HoldShootCooldown : TapShootCooldown;
 
     private void Awake()
     {
@@ -70,9 +74,15 @@ public class PlayerShooting : MonoBehaviour
 
     private void TryShoot()
     {
-        if (!enableShooting || shootAction == null || !shootAction.WasPressedThisFrame() || Time.time < nextShootTime) return;
+        if (!enableShooting || shootAction == null || Time.time < nextShootTime) return;
 
-        nextShootTime = Time.time + Mathf.Max(0.02f, shootCooldown);
+        bool wantsToShoot = GameSettings.AllowHoldFire
+            ? shootAction.IsPressed()
+            : shootAction.WasPressedThisFrame();
+
+        if (!wantsToShoot) return;
+
+        nextShootTime = Time.time + ShootCooldown;
         SpawnProjectile(GetShootDirection());
         PlaySfx(projectileShootSfx, projectileShootSfxVolume);
     }

@@ -3281,7 +3281,7 @@ GameObject:
   - component: {fileID: 1205692588}
   - component: {fileID: 1205692587}
   m_Layer: 0
-  m_Name: Volver a empezar
+  m_Name: Try again...
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3487,7 +3487,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Volver a empezar
+  m_text: Try again...
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 9a14a8a1184c5f14fbce3338ea4d7a35, type: 2}
   m_sharedMaterial: {fileID: 1260715531048141648, guid: 9a14a8a1184c5f14fbce3338ea4d7a35, type: 2}
@@ -4086,7 +4086,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c6f825d91df8046468415ab7e3d4e114, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Protector
-  maxHealth: 80
+  maxHealth: 120
   hitCooldown: 0.08
   damageTags:
   - PlayerAttack
@@ -4146,7 +4146,7 @@ MonoBehaviour:
   deathCameraTargetFieldOfView: 38
   movementChangeIntervalSeconds: 3
   sweepAttackChancePerInterval: 0.4
-  summonerAttackChancePerInterval: 0.2
+  summonerAttackChancePerInterval: 0.3
   tpAttackChancePerInterval: 0.4
   alternateAttackAndMovement: 1
   isInvulnerable: 0
@@ -5577,7 +5577,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Ir al menu
+  m_text: Main menu
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 9a14a8a1184c5f14fbce3338ea4d7a35, type: 2}
   m_sharedMaterial: {fileID: 1260715531048141648, guid: 9a14a8a1184c5f14fbce3338ea4d7a35, type: 2}
